@@ -136,10 +136,19 @@ def build() -> None:
         for md_path in sorted(writing.glob("*.md")):
             html_path = md_path.with_suffix(".html")
             render_md(md_path, html_path, "../style.css", is_article=True)
-    # Ensure .nojekyll and CNAME
+    # Ensure .nojekyll
     (SITE / ".nojekyll").touch()
-    (SITE / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8")
-    print("  .nojekyll + CNAME written")
+    # CNAME only when --with-cname is passed; otherwise site serves at github.io default
+    cname_path = SITE / "CNAME"
+    if os.environ.get("WRITE_CNAME") == "1":
+        cname_path.write_text(DOMAIN + "\n", encoding="utf-8")
+        print(f"  .nojekyll written; CNAME set to {DOMAIN}")
+    else:
+        if cname_path.exists():
+            cname_path.unlink()
+            print("  .nojekyll written; CNAME removed (domain not live yet)")
+        else:
+            print("  .nojekyll written; no CNAME (domain not live yet)")
 
 
 # ---------- deploy ----------
