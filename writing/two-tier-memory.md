@@ -166,6 +166,16 @@ The two-tier split is one primitive. A production agent system runs on a composi
 
 ---
 
+## Structure is orthogonal to skills and tools
+
+The two-tier split is one instance of a more general property the larger architecture depends on: **structure is orthogonal to capability**. The memory layer specifies how facts are organized. It says nothing about what the agent can *do* with them. At any layer of a production agent system — memory, orchestration, reasoning, output — skills and tools can be plugged in to augment or surpass what the LLM does natively.
+
+This matters because LLM native limitations move. The model that can't do X today may do X fluently in six months, but it also may not, and you shouldn't have to rearchitect around either outcome. A layered architecture where skills and tools slot in at any level lets the system stay correct regardless of which capabilities the LLM carries natively on any given day.
+
+Applied to memory: the two-tier pattern is indifferent to whether recall happens by the LLM scanning the index, by a vector-search tool, by a knowledge-graph traversal, or by a future LLM with the entire index in its context window. The structure is the same; the capability layer is swapped. The same principle applies to orchestration — role-tagged addressing works whether sub-agents are LLM calls, fine-tuned specialists, or hand-coded deterministic tools — and to every other layer of the system.
+
+That orthogonality is deliberate. It's what lets a production agent system survive the next capability shift without a rewrite, and it's why the patterns composed here hold up even as the model tier underneath changes out from under them.
+
 ## The meta-point
 
 Memory for agents is infrastructure, not a feature. The moment you treat it as a feature — "the agent has memory now" — you've smuggled in assumptions about what memory is for, and those assumptions are usually about chat.
