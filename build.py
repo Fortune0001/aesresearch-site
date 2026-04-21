@@ -32,14 +32,15 @@ REPO = os.environ.get("REPO_SLUG", "Fortune0001/aesresearch-site")
 DOMAIN = os.environ.get("CUSTOM_DOMAIN", "aesresearch.ai")
 SITE = Path(__file__).resolve().parent
 LAYOUT = (SITE / "layouts" / "default.html").read_text(encoding="utf-8")
-TOKEN_VAR = "GITHUB_TOKEN_FG_Admin"
+TOKEN_VARS = ("GITHUB_TOKEN_CLASSIC", "GITHUB_TOKEN_FG_Admin")  # prefer classic; fall back to fine-grained
 
 
 # ---------- token loading ----------
 def load_token() -> str:
-    token = os.environ.get(TOKEN_VAR)
-    if token:
-        return token
+    for var in TOKEN_VARS:
+        t = os.environ.get(var)
+        if t:
+            return t
     keys = Path.home() / ".keys.env"
     if keys.exists():
         for raw in keys.read_bytes().splitlines():
@@ -47,9 +48,10 @@ def load_token() -> str:
                 line = raw.decode("utf-8")
             except UnicodeDecodeError:
                 continue
-            if line.startswith(f"{TOKEN_VAR}="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
-    raise RuntimeError(f"{TOKEN_VAR} not found in env or ~/.keys.env")
+            for var in TOKEN_VARS:
+                if line.startswith(f"{var}="):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+    raise RuntimeError(f"No token found. Set one of {TOKEN_VARS} in env or ~/.keys.env")
 
 
 def api(method: str, path: str, body: dict | None = None, token: str | None = None) -> tuple[int, dict | str]:
