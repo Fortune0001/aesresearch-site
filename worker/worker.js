@@ -220,6 +220,17 @@ async function handleChat(request, env, origin) {
     });
   }
 
+  // Accept per-session conversation history from the client.
+  // Shape: [{role: 'user'|'assistant', content: '...'}, ...]
+  // Size-limit defensively: max 20 prior turns, max 4000 chars per message.
+  const rawHistory = Array.isArray(body.history) ? body.history : [];
+  const history = rawHistory
+    .filter(t => t && (t.role === 'user' || t.role === 'assistant') && typeof t.content === 'string')
+    .slice(-20)
+    .map(t => ({ role: t.role, content: t.content.slice(0, 4000) }));
+
+  const messages = [...history, { role: 'user', content: message }];
+
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -232,7 +243,7 @@ async function handleChat(request, env, origin) {
       max_tokens: MAX_TOKENS,
       stream: true,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: message }],
+      messages,
     }),
   });
 

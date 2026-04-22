@@ -15,10 +15,15 @@
   const input = document.getElementById('chat-input');
   const sendBtn = document.getElementById('send-btn');
   const fireBtn = document.getElementById('fire-routine-btn');
+  const resetBtn = document.getElementById('reset-btn');
   const convo = document.getElementById('conversation');
   const streamLog = document.getElementById('stream-log');
 
   const API_BASE = 'https://api.aesresearch.ai'; // Worker on proxied subdomain
+
+  // Per-session conversation history. In-memory only — refresh/close tab = fresh.
+  // Sent with each /chat POST so the server stays stateless but the agent has context.
+  const history = [];
 
   function renderEmptyStates() {
     if (!convo.childElementCount) {
@@ -74,11 +79,14 @@
     sendBtn.disabled = true;
     fireBtn.disabled = true;
 
+    // Collected assistant text for appending to history after stream completes
+    let assistantText = '';
+
     try {
       const res = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText }),
+        body: JSON.stringify({ message: userText, history }),
       });
 
       if (!res.ok || !res.body) {
@@ -114,7 +122,9 @@
           if (eventName === 'layer') {
             appendLayer(data.layer, data.decision, data.detail);
           } else if (eventName === 'delta') {
-            assistantBody.textContent += data.text || '';
+            const txt = data.text || '';
+            assistantBody.textContent += txt;
+            assistantText += txt;
             convo.scrollTop = convo.scrollHeight;
           } else if (eventName === 'error') {
             appendStreamError(data.message || 'unknown error');
@@ -127,6 +137,12 @@
       appendStreamError(err.message);
       assistantBody.textContent += ` [failed: ${err.message}]`;
     } finally {
+      // Commit to history only if we got a usable assistant response.
+      // Skip on hard failure (no text at all) so a retry uses a clean prefix.
+      if (assistantText.trim()) {
+        history.push({ role: 'user', content: userText });
+        history.push({ role: 'assistant', content: assistantText });
+      }
       sendBtn.disabled = false;
       fireBtn.disabled = false;
       input.focus();
@@ -185,4 +201,15 @@
       form.requestSubmit();
     }
   });
+
+  // Reset button clears the in-memory history and the visible panels.
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      history.length = 0;
+      convo.innerHTML = '';
+      streamLog.innerHTML = '';
+      renderEmptyStates();
+      input.focus();
+    });
+  }
 })();

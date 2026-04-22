@@ -31,6 +31,7 @@
         <div class="chat-controls">
           <button id="send-btn" type="submit">Send</button>
           <button id="fire-routine-btn" type="button" title="Dispatch to a saved Claude Routine for a longer-horizon scheduled run. Returns a session URL you can watch in a new tab.">Fire as Routine &rarr;</button>
+          <button id="reset-btn" type="button" title="Clear the in-memory conversation history and thought stream. Closes the current session; next message starts a fresh context.">Reset</button>
         </div>
       </form>
     </div>
@@ -50,7 +51,14 @@
       <li><strong>Attention routing</strong> — the policy decides whether the step is native-LLM-cheap, tool-necessary, or skill-appropriate. Each decision lands in the stream with the reasoning attached.</li>
       <li><strong>Response</strong> — only after the three layers pass does the agent respond. If the membrane rejects, you'll see the rejection reason rather than a response.</li>
     </ol>
-    <p>Read the deeper-dive writeups for each layer: <a href="../writing/two-tier-memory.html">memory</a>, <a href="../writing/context-window-battery.html">context survival</a>, <a href="../writing/attention-management.html">attention management</a>.</p>
+    <h3>Honest note on what this demo's memory actually does</h3>
+    <p>The memory this demo shows is composed of two pieces, and it is helpful to keep them separate.</p>
+    <ul>
+      <li><strong>Fixture memory</strong> — five hardcoded entries in the Worker's system prompt. The model scans these and reports which it loaded. This is a stand-in for a real <code>MEMORY.md</code> index; it does not grow or learn.</li>
+      <li><strong>Per-session conversation history</strong> — your turns in this browser tab accumulate in local JavaScript memory and are sent with each new request so the agent has context within the session. It is not persisted server-side, it is not shared across tabs, and it resets when you reload or click Reset.</li>
+    </ul>
+    <p>The production AES Research memory system — the one described in the <a href="../writing/two-tier-memory.html">two-tier memory writeup</a> — persists across sessions, supports index scans plus per-topic files, and is written to atomically to survive compaction (see <a href="../writing/context-window-battery.html">context survival</a>). None of that runs here. This demo is the whiteboard sketch of the architecture, not the production bridge.</p>
+    <p>For the full architectural map — memory, context survival, attention management — read the <a href="../writing/">series</a>.</p>
   </section>
 
   <footer>
