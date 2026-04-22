@@ -18,7 +18,7 @@
   const convo = document.getElementById('conversation');
   const streamLog = document.getElementById('stream-log');
 
-  const API_BASE = ''; // same-origin; Worker is mounted under /api/* via Cloudflare route
+  const API_BASE = 'https://api.aesresearch.ai'; // Worker on proxied subdomain
 
   function renderEmptyStates() {
     if (!convo.childElementCount) {
@@ -75,7 +75,7 @@
     fireBtn.disabled = true;
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat`, {
+      const res = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userText }),
@@ -142,7 +142,7 @@
     fireBtn.disabled = true;
     appendLayer('attention', 'routing to Claude Routine', 'Dispatching to a pre-configured routine for longer-horizon autonomous work. Response is a session URL; open it in a new tab to watch.');
     try {
-      const res = await fetch(`${API_BASE}/api/fire-routine`, {
+      const res = await fetch(`${API_BASE}/fire-routine`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: userText }),

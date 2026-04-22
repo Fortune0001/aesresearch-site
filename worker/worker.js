@@ -282,8 +282,11 @@ export default {
       return new Response('method not allowed', { status: 405, headers: corsHeaders(origin) });
     }
 
-    if (url.pathname === '/api/chat') return handleChat(request, env, origin);
-    if (url.pathname === '/api/fire-routine') return handleFireRoutine(request, env, origin);
+    // Support both /chat and /api/chat so the worker works whether routed
+    // under a subdomain (api.aesresearch.ai/chat) or a path prefix (aesresearch.ai/api/chat).
+    const path = url.pathname.replace(/^\/api/, '');
+    if (path === '/chat' || path === '/') return handleChat(request, env, origin);
+    if (path === '/fire-routine') return handleFireRoutine(request, env, origin);
 
     return new Response('not found', { status: 404, headers: corsHeaders(origin) });
   },

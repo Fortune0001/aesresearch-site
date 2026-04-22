@@ -1,16 +1,14 @@
 name = "aesresearch-demo"
 main = "worker.js"
 compatibility_date = "2026-04-22"
-workers_dev = true
+workers_dev = false
+account_id = "e00e0d2d49239b8a758f229badf2594e"
 
-# Route /api/* on aesresearch.ai to this Worker.
-# Requires the aesresearch.ai zone to be connected in the same Cloudflare account.
+# Route api.aesresearch.ai/* to this Worker.
+# The api subdomain is a proxied AAAA record (100::) in Cloudflare DNS,
+# so Cloudflare intercepts before the null origin and runs the Worker.
 [[routes]]
-pattern = "aesresearch.ai/api/*"
-zone_name = "aesresearch.ai"
-
-[[routes]]
-pattern = "www.aesresearch.ai/api/*"
+pattern = "api.aesresearch.ai/*"
 zone_name = "aesresearch.ai"
 
 # Secrets (do NOT put values here — use `wrangler secret put <NAME>`):
