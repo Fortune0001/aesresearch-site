@@ -24,7 +24,7 @@ More deep-dives in progress.
 
 ## Live demo
 
-Interactive agent-coordination demo in development — a scoped example showing the director pattern, two-tier memory, and skeptic membrane running on a single visitor-submitted research task. *Coming soon.*
+**[Try the live architecture demo &rarr;](demo/)** Type a question and watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Backed by a Cloudflare Worker that keeps the API keys server-side and enforces the demo prompt; the worker source is open at [/worker/](worker/).
 
 ---
 

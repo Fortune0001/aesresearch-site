@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live demo — AES Research</title>
+  <meta name="description" content="Interactive demonstration of the AES Research agentic-AI architecture: skeptic membrane, two-tier memory, and attention-management routing running in real time on a visitor-submitted prompt.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<main class="demo-main">
+  <div class="nav"><a href="../index.html">&larr; AES Research</a></div>
+
+  <header>
+    <h1>Live architecture demo</h1>
+    <p class="tagline">Watch the AES Research patterns fire on your own input.</p>
+  </header>
+
+  <p>Type a question or research request below. A Cloudflare Worker dispatches to Claude with a system prompt that exercises the full stack: <strong>skeptic membrane</strong> pre-check, <strong>two-tier memory</strong> lookup against a scoped fixture, and <strong>attention routing</strong> between native reasoning and tool use. The thought-stream panel on the right shows each layer firing before the final answer.</p>
+
+  <p class="disclaimer">This demo is scoped and rate-limited. It uses a throwaway fixture memory and a dedicated prompt — the real AES Research systems running in production are not exposed here. The point is to <em>observe the architecture in motion</em>, not to probe the implementation.</p>
+
+  <section class="demo-shell">
+    <div class="demo-chat">
+      <div id="conversation" class="conversation" aria-live="polite"></div>
+      <form id="chat-form" class="chat-form" autocomplete="off">
+        <label for="chat-input" class="sr-only">Your message</label>
+        <textarea id="chat-input" name="message" rows="3" placeholder="Ask a research question, or describe a task you'd hand to a production agent…" required></textarea>
+        <div class="chat-controls">
+          <button id="send-btn" type="submit">Send</button>
+          <button id="fire-routine-btn" type="button" title="Dispatch to a saved Claude Routine for a longer-horizon scheduled run. Returns a session URL you can watch in a new tab.">Fire as Routine &rarr;</button>
+        </div>
+      </form>
+    </div>
+
+    <aside class="thought-stream" aria-label="Architecture thought stream">
+      <h2>Thought stream</h2>
+      <p class="ts-explainer">Every layer of the stack emits a decision here as it fires.</p>
+      <ol id="stream-log" class="stream-log"></ol>
+    </aside>
+  </section>
+
+  <section class="demo-architecture">
+    <h2>What you're seeing</h2>
+    <ol>
+      <li><strong>Skeptic membrane</strong> — the input is checked for prompt-injection, ambiguity, and scope violations before the agent acts. Community discussion of Claude Routines explicitly flagged prompt-injection risk on triggered agents; this is the mitigation.</li>
+      <li><strong>Two-tier memory lookup</strong> — the scoped fixture <code>MEMORY.md</code> index is scanned; only entries the index marks relevant are loaded into context. Watch the stream report which entries got pulled and which were skipped.</li>
+      <li><strong>Attention routing</strong> — the policy decides whether the step is native-LLM-cheap, tool-necessary, or skill-appropriate. Each decision lands in the stream with the reasoning attached.</li>
+      <li><strong>Response</strong> — only after the three layers pass does the agent respond. If the membrane rejects, you'll see the rejection reason rather than a response.</li>
+    </ol>
+    <p>Read the deeper-dive writeups for each layer: <a href="../writing/two-tier-memory.html">memory</a>, <a href="../writing/context-window-battery.html">context survival</a>, <a href="../writing/attention-management.html">attention management</a>.</p>
+  </section>
+
+  <footer>
+    <p>AES Research &middot; Houston, TX &middot; 2026</p>
+  </footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

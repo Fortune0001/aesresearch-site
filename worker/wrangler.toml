@@ -1,0 +1,22 @@
+name = "aesresearch-demo"
+main = "worker.js"
+compatibility_date = "2026-04-22"
+workers_dev = true
+
+# Route /api/* on aesresearch.ai to this Worker.
+# Requires the aesresearch.ai zone to be connected in the same Cloudflare account.
+[[routes]]
+pattern = "aesresearch.ai/api/*"
+zone_name = "aesresearch.ai"
+
+[[routes]]
+pattern = "www.aesresearch.ai/api/*"
+zone_name = "aesresearch.ai"
+
+# Secrets (do NOT put values here — use `wrangler secret put <NAME>`):
+#   ANTHROPIC_API_KEY   — Anthropic API key
+#   ROUTINE_URL         — full routine /fire URL (optional; only needed for /api/fire-routine)
+#   ROUTINE_TOKEN       — routine bearer token (optional; only needed for /api/fire-routine)
+
+[vars]
+# Non-secret build-time vars (none yet)
