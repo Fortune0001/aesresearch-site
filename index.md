@@ -22,6 +22,15 @@ I build the architectural patterns that let multi-agent systems survive real pro
 
 More deep-dives in progress.
 
+## Skills
+
+Four reusable Claude Code skills that encode the patterns above as loadable instructions. Authored to be used directly (by a Claude Code session that has this repo cloned) and read independently as documentation of the decision rules each pattern formalizes.
+
+- **[`aes-skeptic-membrane`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-skeptic-membrane/SKILL.md)** — vet an autonomous agent output before it crosses the boundary
+- **[`aes-two-tier-memory`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-two-tier-memory/SKILL.md)** — scan an index + topic files and decide which entries to load
+- **[`aes-attention-routing`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-attention-routing/SKILL.md)** — route a step between native / tool / skill / sub-agent
+- **[`aes-pattern-map`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-pattern-map/SKILL.md)** — identify which patterns compose for an architecture question
+
 ## Live demo
 
 **[Try the live architecture demo &rarr;](demo/)** Type a question and watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Backed by a Cloudflare Worker that keeps the API keys server-side and enforces the demo prompt; the worker source is open at [/worker/](worker/).

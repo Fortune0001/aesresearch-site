@@ -29,6 +29,14 @@
 <li><strong><a href="writing/attention-management.html">Attention management: routing between native LLM capability and augmented skills and tools</a></strong> — the control plane that decides, at every step, where the work should happen</li>
 </ul>
 <p>More deep-dives in progress.</p>
+<h2>Skills</h2>
+<p>Four reusable Claude Code skills that encode the patterns above as loadable instructions. Authored to be used directly (by a Claude Code session that has this repo cloned) and read independently as documentation of the decision rules each pattern formalizes.</p>
+<ul>
+<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-skeptic-membrane/SKILL.md"><code>aes-skeptic-membrane</code></a></strong> — vet an autonomous agent output before it crosses the boundary</li>
+<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-two-tier-memory/SKILL.md"><code>aes-two-tier-memory</code></a></strong> — scan an index + topic files and decide which entries to load</li>
+<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-attention-routing/SKILL.md"><code>aes-attention-routing</code></a></strong> — route a step between native / tool / skill / sub-agent</li>
+<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-pattern-map/SKILL.md"><code>aes-pattern-map</code></a></strong> — identify which patterns compose for an architecture question</li>
+</ul>
 <h2>Live demo</h2>
 <p><strong><a href="demo/">Try the live architecture demo &rarr;</a></strong> Type a question and watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Backed by a Cloudflare Worker that keeps the API keys server-side and enforces the demo prompt; the worker source is open at <a href="worker/">/worker/</a>.</p>
 <hr>
