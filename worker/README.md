@@ -2,9 +2,11 @@
 
 Backend for the live demo on [aesresearch.ai/demo](https://aesresearch.ai/demo/).
 
+Routed on the proxied `api.aesresearch.ai` subdomain (AAAA `100::`, orange-cloud in Cloudflare DNS so Cloudflare intercepts before any origin).
+
 Two endpoints:
-- `POST /api/chat` — streaming SSE proxy to Claude messages API. System prompt enforces the three architectural layers (skeptic membrane → two-tier memory → attention routing) and emits each as a structured event to the frontend.
-- `POST /api/fire-routine` — fires a pre-configured Claude Routine, returns the session URL for the visitor to watch.
+- `POST https://api.aesresearch.ai/chat` — streaming SSE proxy to Claude messages API. System prompt enforces the three architectural layers (skeptic membrane → two-tier memory → attention routing) and emits each as a structured event to the frontend.
+- `POST https://api.aesresearch.ai/fire-routine` — fires a pre-configured Claude Routine, returns the session URL for the visitor to watch.
 
 ---
 

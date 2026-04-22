@@ -101,9 +101,16 @@ async function transformUpstream(upstreamResponse, writable) {
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
 
-  // Accumulate text across deltas to find layer tags + response blocks
-  let buffer = '';
-  let inResponse = false;
+  // fullText accumulates EVERY char from the model (pre-<response>, layer tags, response body, etc.).
+  // responseStartInFull is the index in fullText where the response body begins (right after <response>).
+  // responseEmitted is how many chars of the response body we've already streamed to the client.
+  // CLOSE_TAG_LEN is the length of "</response>" — we always hold that many trailing chars
+  // back in case they complete the close tag on the next delta.
+  let fullText = '';
+  let responseStartInFull = -1;
+  let responseEmitted = 0;
+  const CLOSE_TAG = '</response>';
+  const CLOSE_TAG_LEN = CLOSE_TAG.length;
   const emittedLayers = new Set();
 
   async function emit(name, data) {
@@ -137,12 +144,12 @@ async function transformUpstream(upstreamResponse, writable) {
         try { msg = JSON.parse(payload); } catch { continue; }
         if (msg.type === 'content_block_delta' && msg.delta?.type === 'text_delta') {
           const textChunk = msg.delta.text || '';
-          buffer += textChunk;
+          fullText += textChunk;
 
-          // Scan for complete <layer ... /> tags we haven't emitted yet
+          // Emit any newly-complete <layer ... /> tags (pre-response section)
           const layerRe = /<layer\s+[^>]*\/>/g;
           let m;
-          while ((m = layerRe.exec(buffer)) !== null) {
+          while ((m = layerRe.exec(fullText)) !== null) {
             const tag = m[0];
             if (emittedLayers.has(tag)) continue;
             emittedLayers.add(tag);
@@ -150,29 +157,42 @@ async function transformUpstream(upstreamResponse, writable) {
             if (name) await emit('layer', { layer: name, decision, detail });
           }
 
-          // Detect and stream <response>...</response> content as deltas
-          if (!inResponse) {
-            const startIdx = buffer.indexOf('<response>');
-            if (startIdx !== -1) {
-              inResponse = true;
-              const afterOpen = buffer.slice(startIdx + '<response>'.length);
-              if (afterOpen) await emit('delta', { text: afterOpen });
-              buffer = afterOpen;
+          // Detect start of <response> (once)
+          if (responseStartInFull === -1) {
+            const openIdx = fullText.indexOf('<response>');
+            if (openIdx !== -1) {
+              responseStartInFull = openIdx + '<response>'.length;
             }
-          } else {
-            // buffer already contains only post-<response> text
-            const endIdx = buffer.indexOf('</response>');
-            if (endIdx !== -1) {
-              const body = buffer.slice(0, endIdx);
-              if (body) await emit('delta', { text: textChunk });
-              buffer = buffer.slice(endIdx + '</response>'.length);
-              inResponse = false;
-            } else {
-              // still streaming response body
-              await emit('delta', { text: textChunk });
+          }
+
+          // If inside response body, emit new body content, always holding back
+          // CLOSE_TAG_LEN trailing chars in case they form </response> next.
+          if (responseStartInFull !== -1) {
+            const closeIdx = fullText.indexOf(CLOSE_TAG, responseStartInFull);
+            // Compute the end index of emittable body content in fullText.
+            // - If close tag seen: emit up to closeIdx (exclusive).
+            // - Else: emit up to fullText.length - CLOSE_TAG_LEN (hold a buffer).
+            const safeEnd = closeIdx !== -1
+              ? closeIdx
+              : Math.max(responseStartInFull, fullText.length - CLOSE_TAG_LEN);
+            const alreadyEmittedEnd = responseStartInFull + responseEmitted;
+            if (safeEnd > alreadyEmittedEnd) {
+              const text = fullText.slice(alreadyEmittedEnd, safeEnd);
+              await emit('delta', { text });
+              responseEmitted += text.length;
             }
           }
         } else if (msg.type === 'message_stop') {
+          // Final flush: if we're still inside a response body, emit any remaining
+          // content up to (but not including) a trailing close tag if present.
+          if (responseStartInFull !== -1) {
+            const closeIdx = fullText.indexOf(CLOSE_TAG, responseStartInFull);
+            const end = closeIdx !== -1 ? closeIdx : fullText.length;
+            const alreadyEmittedEnd = responseStartInFull + responseEmitted;
+            if (end > alreadyEmittedEnd) {
+              await emit('delta', { text: fullText.slice(alreadyEmittedEnd, end) });
+            }
+          }
           await emit('done', { stop_reason: msg.stop_reason || 'end_turn' });
         } else if (msg.type === 'error') {
           await emit('error', { message: msg.error?.message || 'upstream error' });
