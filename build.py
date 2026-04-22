@@ -209,17 +209,22 @@ def enable_pages() -> None:
         else:
             print(f"  pages enable failed: HTTP {status} {data}")
             return
-    # Custom domain
-    status, data = api(
-        "PUT",
-        f"/repos/{REPO}/pages",
-        body={"cname": DOMAIN, "https_enforced": True},
-        token=token,
-    )
-    if status in (200, 204):
-        print(f"  custom domain set: {DOMAIN}")
+    # Custom domain (only when WRITE_CNAME=1; otherwise leave/clear to serve on github.io default)
+    if os.environ.get("WRITE_CNAME") == "1":
+        status, data = api(
+            "PUT",
+            f"/repos/{REPO}/pages",
+            body={"cname": DOMAIN, "https_enforced": True},
+            token=token,
+        )
+        if status in (200, 204):
+            print(f"  custom domain set: {DOMAIN}")
+        else:
+            print(f"  custom domain set failed: HTTP {status} {data}")
     else:
-        print(f"  custom domain set failed: HTTP {status} {data}")
+        # Ensure no stale cname is stuck in Pages config
+        api("PUT", f"/repos/{REPO}/pages", body={"cname": None, "https_enforced": False}, token=token)
+        print(f"  custom domain cleared (serving at {data.get('html_url') if isinstance(data, dict) else 'github.io default'})")
 
 
 # ---------- main ----------
