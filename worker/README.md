@@ -102,10 +102,11 @@ The Claude Routines platform requires UI creation for new routines. API-only cre
 
 ## Operation notes
 
-- **Per-account daily routine limit** applies to `/api/fire-routine`. Monitor at [claude.ai/settings/usage](https://claude.ai/settings/usage).
-- **Anthropic API key** drives `/api/chat`. Set a monthly spend cap on the key at [console.anthropic.com/settings/billing](https://console.anthropic.com/settings/billing).
-- **Rate limiting:** MVP has no per-visitor rate limit. Add Cloudflare Workers KV + sliding-window counter before public launch if abuse is a concern.
-- **Observability:** `wrangler tail` streams request logs. For persistent logs, wire up Workers Analytics Engine.
+- **Per-account daily routine limit** applies to `/fire-routine`. Monitor at [claude.ai/settings/usage](https://claude.ai/settings/usage).
+- **Anthropic API key** drives `/chat`. Set a monthly spend cap on the key at [console.anthropic.com/settings/billing](https://console.anthropic.com/settings/billing).
+- **Per-IP rate limiting is live** via Cloudflare KV (namespace `RATE_LIMIT`, fixed-hour buckets). Limits: `/chat` 30/hr, `/fire-routine` 5/hr. Response headers surface `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After` (on 429). Configure limits in `worker.js` → `LIMITS`.
+- **Observability:** Analytics Engine binding is *commented out* in `wrangler.toml`. The dataset (`aesresearch_demo`) + binding (`ANALYTICS`) are pre-created in the Cloudflare dashboard. To turn it on, add `Account Analytics: Edit` to the Cloudflare API token (existing token was scoped via the "Edit Cloudflare Workers" template and lacks this permission; fine-grained PATs can't be re-scoped after creation, so generate a new token or edit if using classic), uncomment the `[[analytics_engine_datasets]]` block, and redeploy. The `writeAnalytics` calls in `worker.js` are already wired — they no-op gracefully when `env.ANALYTICS` is undefined.
+- **Logs:** `wrangler tail` streams real-time request logs during dev.
 
 ---
 

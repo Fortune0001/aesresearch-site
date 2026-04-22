@@ -18,3 +18,16 @@ zone_name = "aesresearch.ai"
 
 [vars]
 # Non-secret build-time vars (none yet)
+
+# Per-IP rate limit counters. Fixed-hour buckets; TTL 3600s.
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "c82fd26550cf4a35bde82d61fa21a28b"
+
+# Per-request analytics (pathname, status, ip prefix, latency). Queryable via Cloudflare SQL API.
+# Pending: the Workers API token needs "Account Analytics: Edit" permission added before this
+# binding can deploy. Dataset "aesresearch_demo" + binding "ANALYTICS" are already created in
+# the Cloudflare dashboard; uncomment once the token is re-scoped.
+# [[analytics_engine_datasets]]
+# binding = "ANALYTICS"
+# dataset = "aesresearch_demo"

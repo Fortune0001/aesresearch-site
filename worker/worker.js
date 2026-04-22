@@ -22,6 +22,14 @@ const MAX_TOKENS = 1024;
 const API_VERSION = '2023-06-01';
 const BETA_HEADER = 'experimental-cc-routine-2026-04-01';
 
+// Per-IP rate limits (fixed-hour bucket). /fire-routine is tighter because
+// each fire draws down Daniel's daily Routine cap.
+const LIMITS = {
+  '/chat': 30,
+  '/fire-routine': 5,
+};
+const RATE_LIMIT_WINDOW_SEC = 3600;
+
 // CORS origin allowlist — set tighter in production
 const ALLOWED_ORIGINS = new Set([
   'https://aesresearch.ai',
@@ -87,6 +95,49 @@ function corsHeaders(origin) {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   };
+}
+
+// Client IP with a safe fallback. We only use a /16 prefix for analytics to avoid
+// storing full visitor IPs.
+function clientIp(request) {
+  return request.headers.get('CF-Connecting-IP') || request.headers.get('X-Real-IP') || '0.0.0.0';
+}
+
+function ipPrefix(ip) {
+  // IPv4 /16 or IPv6 /48; coarse enough to preserve privacy, fine enough to spot abuse patterns.
+  if (ip.includes(':')) return ip.split(':').slice(0, 3).join(':');
+  const parts = ip.split('.');
+  return parts.length === 4 ? `${parts[0]}.${parts[1]}` : ip;
+}
+
+// Fixed-window hour bucket. Returns { allowed, remaining, retryAfter }.
+async function checkRateLimit(env, ip, pathname) {
+  const limit = LIMITS[pathname];
+  if (!limit || !env.RATE_LIMIT) return { allowed: true, remaining: Infinity, retryAfter: 0 };
+  const nowSec = Math.floor(Date.now() / 1000);
+  const bucket = Math.floor(nowSec / RATE_LIMIT_WINDOW_SEC);
+  const key = `rl:${pathname}:${ip}:${bucket}`;
+  const raw = await env.RATE_LIMIT.get(key);
+  const count = raw ? parseInt(raw, 10) : 0;
+  if (count >= limit) {
+    const retryAfter = (bucket + 1) * RATE_LIMIT_WINDOW_SEC - nowSec;
+    return { allowed: false, remaining: 0, retryAfter };
+  }
+  // Best-effort increment. TTL slightly larger than window so the key self-expires.
+  await env.RATE_LIMIT.put(key, String(count + 1), { expirationTtl: RATE_LIMIT_WINDOW_SEC + 60 });
+  return { allowed: true, remaining: limit - count - 1, retryAfter: 0 };
+}
+
+// Fire-and-forget analytics write. Never blocks the request.
+function writeAnalytics(env, pathname, status, ip, latencyMs) {
+  if (!env.ANALYTICS) return;
+  try {
+    env.ANALYTICS.writeDataPoint({
+      blobs: [pathname, String(status), ipPrefix(ip)],
+      doubles: [latencyMs],
+      indexes: [pathname],
+    });
+  } catch { /* don't let analytics break the response */ }
 }
 
 function sseEvent(name, data) {
@@ -302,23 +353,58 @@ async function handleFireRoutine(request, env, origin) {
 
 export default {
   async fetch(request, env, ctx) {
+    const start = Date.now();
     const url = new URL(request.url);
     const origin = request.headers.get('Origin') || '';
+    const ip = clientIp(request);
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
     if (request.method !== 'POST') {
-      return new Response('method not allowed', { status: 405, headers: corsHeaders(origin) });
+      const res = new Response('method not allowed', { status: 405, headers: corsHeaders(origin) });
+      writeAnalytics(env, url.pathname, 405, ip, Date.now() - start);
+      return res;
     }
 
-    // Support both /chat and /api/chat so the worker works whether routed
-    // under a subdomain (api.aesresearch.ai/chat) or a path prefix (aesresearch.ai/api/chat).
     const path = url.pathname.replace(/^\/api/, '');
-    if (path === '/chat' || path === '/') return handleChat(request, env, origin);
-    if (path === '/fire-routine') return handleFireRoutine(request, env, origin);
+    const normalized = path === '/' ? '/chat' : path;
 
-    return new Response('not found', { status: 404, headers: corsHeaders(origin) });
+    // Rate limit before touching Anthropic. KV read is ~10ms, much cheaper than burning a token.
+    const rl = await checkRateLimit(env, ip, normalized);
+    if (!rl.allowed) {
+      const res = new Response(
+        JSON.stringify({ error: 'rate limit exceeded', retry_after_seconds: rl.retryAfter }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(rl.retryAfter),
+            'X-RateLimit-Limit': String(LIMITS[normalized] || 0),
+            'X-RateLimit-Remaining': '0',
+            ...corsHeaders(origin),
+          },
+        }
+      );
+      writeAnalytics(env, normalized, 429, ip, Date.now() - start);
+      return res;
+    }
+
+    let response;
+    if (normalized === '/chat') response = await handleChat(request, env, origin);
+    else if (normalized === '/fire-routine') response = await handleFireRoutine(request, env, origin);
+    else response = new Response('not found', { status: 404, headers: corsHeaders(origin) });
+
+    // Attach rate-limit headers to successful responses too
+    if (LIMITS[normalized] && response.status < 500) {
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set('X-RateLimit-Limit', String(LIMITS[normalized]));
+      newHeaders.set('X-RateLimit-Remaining', String(rl.remaining));
+      response = new Response(response.body, { status: response.status, headers: newHeaders });
+    }
+
+    writeAnalytics(env, normalized, response.status, ip, Date.now() - start);
+    return response;
   },
 };
