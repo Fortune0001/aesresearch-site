@@ -45,16 +45,126 @@ const T3 = `Got it — thanks for writing. I'll reply personally within a few da
 
 — Daniel`;
 
-function selectTemplate(fromAddr) {
+// Map a classifier label → template (or null to skip the auto-reply entirely).
+function templateForLabel(label) {
+  switch ((label || '').toLowerCase()) {
+    case 'recruiter_specific':
+    case 'recruiter_generic':
+    case 'recruiter':
+      return { template: T2, skip: false };
+    case 'peer':
+    case 'researcher':
+    case 'colleague':
+      return { template: T3, skip: false };
+    case 'spam':
+    case 'notification':
+    case 'transactional':
+      return { template: null, skip: true };
+    case 'other':
+    default:
+      return { template: T1, skip: false };
+  }
+}
+
+// Fallback rule-based classifier — used when both Gemini and Haiku are unavailable.
+function ruleBasedLabel(fromAddr) {
   const addr = fromAddr.toLowerCase();
   for (const dom of RECRUITER_DOMAINS) {
-    if (addr.includes(dom)) return T2;
+    if (addr.includes(dom)) return 'recruiter_generic';
   }
-  // Personal-domain heuristic: free-mail providers => T3 peer
   if (/@(gmail|outlook|hotmail|yahoo|icloud|fastmail|protonmail|proton\.me|aol)\./i.test(addr)) {
-    return T3;
+    return 'peer';
   }
-  return T1;
+  return 'other';
+}
+
+// Format the excerpt sent to the LLM classifier. Body has already been captured
+// by readHeadersAndBody; this just shapes it (strips quotes / signatures / caps).
+function shapeClassifierExcerpt(headers, bodyExcerpt, fromAddr) {
+  const subject = (/^Subject:\s*(.+)$/im.exec(headers)?.[1] || '').replace(/[\r\n]/g, ' ').slice(0, 200);
+  const cleaned = (bodyExcerpt || '')
+    .replace(/^>+.*$/gm, '')              // strip quoted reply chains
+    .replace(/--\s*\n[\s\S]*$/m, '')      // strip signature delimiter onward
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 600);
+  return `From: ${fromAddr}\nSubject: ${subject}\n\n${cleaned}`;
+}
+
+const CLASSIFIER_SYSTEM = `You are an email-triage classifier for an independent AI researcher's inbox. Read the email excerpt and reply with ONE word from this fixed set, nothing else:
+
+- recruiter_specific: Recruiter pitch with named company AND specific role/title AND (compensation OR specific team)
+- recruiter_generic: Generic recruiter outreach without specifics ("exciting opportunity", "your profile", no comp / no specific role)
+- peer: Researcher, practitioner, or colleague writing about ideas, work, or essays — NOT a hiring inquiry
+- spam: Promotional, marketing, scam, low-effort outreach
+- notification: Auto-generated alert, billing notice, calendar invite, system notification
+- other: Anything that doesn't clearly fit above
+
+Respond with ONLY the label word. No explanation. No punctuation.`;
+
+async function classifyWithGemini(env, excerpt) {
+  if (!env.GEMINI_API_KEY) return null;
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: CLASSIFIER_SYSTEM }] },
+        contents: [{ parts: [{ text: excerpt }] }],
+        generationConfig: { temperature: 0, maxOutputTokens: 16 },
+      }),
+    });
+    if (!r.ok) {
+      console.warn(`[classifier:gemini] HTTP ${r.status}`);
+      return null;
+    }
+    const j = await r.json();
+    const text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return text.trim().toLowerCase().split(/\s+/)[0] || null;
+  } catch (e) {
+    console.warn(`[classifier:gemini] error: ${(e.message || e).toString().slice(0, 200)}`);
+    return null;
+  }
+}
+
+async function classifyWithHaiku(env, excerpt) {
+  if (!env.ANTHROPIC_API_KEY) return null;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 16,
+        system: CLASSIFIER_SYSTEM,
+        messages: [{ role: 'user', content: excerpt }],
+      }),
+    });
+    if (!r.ok) {
+      console.warn(`[classifier:haiku] HTTP ${r.status}`);
+      return null;
+    }
+    const j = await r.json();
+    const text = j.content?.[0]?.text || '';
+    return text.trim().toLowerCase().split(/\s+/)[0] || null;
+  } catch (e) {
+    console.warn(`[classifier:haiku] error: ${(e.message || e).toString().slice(0, 200)}`);
+    return null;
+  }
+}
+
+// Three-layer classifier: Gemini primary → Haiku fallback → rule-based final.
+// Returns { label, source } where source is 'gemini' | 'haiku' | 'rule'.
+async function classify(env, excerpt, fromAddr) {
+  const gem = await classifyWithGemini(env, excerpt);
+  if (gem) return { label: gem, source: 'gemini' };
+  const hai = await classifyWithHaiku(env, excerpt);
+  if (hai) return { label: hai, source: 'haiku' };
+  return { label: ruleBasedLabel(fromAddr), source: 'rule' };
 }
 
 function unfoldHeaders(raw) {
@@ -80,33 +190,53 @@ function hasHeader(rawHeaders, name) {
   return re.test(rawHeaders);
 }
 
-async function readHeaders(message) {
-  // Read just the headers portion of the raw RFC822 stream. Cap at 64KB to bound
-  // memory on hostile / malformed input. Try both \r\n\r\n and \n\n (some MTAs
-  // normalize line endings).
+async function readHeadersAndBody(message) {
+  // Single-pass read of the RFC-822 stream. Returns { headers, bodyExcerpt }.
+  // Caps headers at 64KB and body excerpt at 4KB so the classifier never sees
+  // the full message body — privacy mitigation for free-tier LLM retention.
+  const HEADER_LIMIT = HEADERS_BUFFER_LIMIT; // 64KB
+  const BODY_EXCERPT_LIMIT = 4096;
   const reader = message.raw.getReader();
   const decoder = new TextDecoder();
   let buf = '';
-  while (true) {
-    if (buf.length >= HEADERS_BUFFER_LIMIT) {
-      try { reader.cancel(); } catch {}
-      break;
+  let headers = '';
+  let bodyExcerpt = '';
+  let pastHeaders = false;
+  let bodyBytesRead = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      if (!pastHeaders) {
+        const sepCRLF = buf.indexOf('\r\n\r\n');
+        const sepLF = buf.indexOf('\n\n');
+        const sep = sepCRLF !== -1 ? sepCRLF : (sepLF !== -1 ? sepLF : -1);
+        if (sep !== -1) {
+          headers = buf.slice(0, sep);
+          buf = buf.slice(sep).replace(/^[\r\n]+/, '');
+          pastHeaders = true;
+        } else if (buf.length >= HEADER_LIMIT) {
+          headers = buf.slice(0, HEADER_LIMIT);
+          buf = '';
+          pastHeaders = true;
+        }
+      }
+      if (pastHeaders) {
+        const need = BODY_EXCERPT_LIMIT - bodyBytesRead;
+        if (need > 0) {
+          const take = Math.min(need, buf.length);
+          bodyExcerpt += buf.slice(0, take);
+          bodyBytesRead += take;
+          buf = buf.slice(take);
+        }
+        if (bodyBytesRead >= BODY_EXCERPT_LIMIT) break;
+      }
     }
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    const sepCRLF = buf.indexOf('\r\n\r\n');
-    const sepLF = buf.indexOf('\n\n');
-    const sep = sepCRLF !== -1
-      ? sepCRLF
-      : (sepLF !== -1 ? sepLF : -1);
-    if (sep !== -1) {
-      buf = buf.slice(0, sep);
-      try { reader.cancel(); } catch {}
-      break;
-    }
+  } finally {
+    try { reader.cancel(); } catch {}
   }
-  return buf;
+  return { headers, bodyExcerpt };
 }
 
 function buildReply(originalHeaders, originalMessageId, fromAddr, template) {
@@ -146,7 +276,7 @@ function rawToStream(raw) {
 export default {
   async email(message, env, ctx) {
     try {
-      const headers = await readHeaders(message);
+      const { headers, bodyExcerpt } = await readHeadersAndBody(message);
       const headerFromAddr = extractFromAddr(headers);
       // SMTP envelope sender — required as the `to` argument on EmailMessage so
       // Cloudflare's DMARC-aligned reply path matches the receiving MTA's view of
@@ -204,10 +334,19 @@ export default {
         if (last) return;
       }
 
+      // Three-layer LLM classifier (Gemini primary → Haiku fallback → rule-based).
+      // Pick template OR skip the auto-reply if classifier flags spam/notification.
+      // Excerpt is body-capped + signature-stripped before leaving our infra.
+      const excerpt = shapeClassifierExcerpt(headers, bodyExcerpt, replyTo);
+      const { label, source } = await classify(env, excerpt, replyTo);
+      const decision = templateForLabel(label);
+      console.log(`[classifier:${source}] ${replyTo} → ${label} → ${decision.skip ? 'SKIP' : 'reply'}`);
+      if (decision.skip) return;
+      const template = decision.template;
+
       // Build + send the reply. Increment global counter only after a successful
       // send; if reply throws (DMARC, rate, etc.), the per-sender lock is already
       // set which prevents retry loops, but the global counter doesn't burn.
-      const template = selectTemplate(replyTo);
       const rawMessageId = (/^Message-ID:\s*(.+)$/im.exec(headers)?.[1] || '').trim();
       const messageId = rawMessageId || `<unknown@aesresearch.ai>`;
       const replyRaw = buildReply(headers, messageId, displayTo, template);
