@@ -3,29 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Two-tier memory for production agents: what chat systems don't tell you</title>
+  <title>Two-tier memory for production agents: what chat systems don't tell you — AES Research</title>
   <meta name="description" content="An architectural pattern for agents that need to remember across sessions without choking on their own context.">
   <link rel="stylesheet" href="../style.css">
   <link rel="icon" href="data:,">
 </head>
 <body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a> <span class="sep">/</span> <a href="index.html">Writing</a></nav>
 <main>
-<div class="nav"><a href="../index.html">&larr; AES Research</a></div>
-<h1>Two-tier memory for production agents: what chat systems don&rsquo;t tell you</h1>
+<h1 id="two-tier-memory-for-production-agents-what-chat-systems-dont-tell-you">Two-tier memory for production agents: what chat systems don&rsquo;t tell you</h1>
+<p class="article-meta">Published 2026-04-21 · Updated 2026-04-26 · 12 min read</p>
 <p><em>An architectural pattern for agents that need to remember across sessions without choking on their own context.</em></p>
 <hr>
-<h2>The failure case</h2>
+<h2 id="the-failure-case">The failure case</h2>
 <p>An agent you talk to for an hour is a different problem than an agent you work with for months. Run a session long enough and the naive approaches — &ldquo;stuff everything into the context window,&rdquo; &ldquo;compress the conversation summary,&rdquo; &ldquo;embed everything and retrieve&rdquo; — all start to leak.</p>
 <p>The specific failure mode I want to name is this: on session seven, the agent has forgotten that on session three you told it not to mock the database. On session twelve, it happily re-derives a convention it already saved a note about on session one. On session twenty, its conversation-summary compression has quietly dropped the constraint that made session four&rsquo;s decision correct, and the agent is now operating on a plausible-but-wrong model of your preferences.</p>
 <p>You don&rsquo;t see it happen. You see the output. The output is fine until it isn&rsquo;t. By the time the drift is visible, the agent is operating on summaries it can no longer separate from facts.</p>
 <p>This is a memory problem, and memory systems built for chat don&rsquo;t solve it. This piece describes one that does.</p>
 <hr>
-<h2>Why chat memory doesn&rsquo;t work</h2>
+<h2 id="why-chat-memory-doesnt-work">Why chat memory doesn&rsquo;t work</h2>
 <p>The default mental model for &ldquo;agent memory&rdquo; comes from chat. Chat memory is a scratchpad: everything said in this conversation. Close the tab, start fresh. Some systems layer on a lossy summary for continuity, some attach a vector-embedded retrieval layer, some pin a short &ldquo;user preferences&rdquo; block at the top.</p>
 <p>These are fine for chat. They break for agents that do work because agents that do work accumulate claims. Claims about the user, claims about the project, corrections from prior sessions, confirmations of non-obvious choices. The claim volume grows monotonically while the value density doesn&rsquo;t. A 40-session history summarized into a scratchpad is either too short to carry the decisions that matter or too long to read on every turn. Vector retrieval fetches the wrong thing half the time because &ldquo;retrieval relevance&rdquo; is not the same as &ldquo;claim validity.&rdquo;</p>
 <p>The root issue: chat memory treats every utterance as homogeneous. Production agent memory needs to distinguish between <em>this is what I&rsquo;m thinking about right now</em> and <em>this is a fact I shouldn&rsquo;t have to rediscover next session</em>. Those are not the same data structure.</p>
 <hr>
-<h2>The pattern: two tiers, semantic organization</h2>
+<h2 id="the-pattern-two-tiers-semantic-organization">The pattern: two tiers, semantic organization</h2>
 <p>Two files do the work that one file and a vector store can&rsquo;t:</p>
 <ol>
 <li><strong><code>MEMORY.md</code></strong> — an index. One line per memory. Always loaded into context.</li>
@@ -36,7 +38,7 @@
 <p>The topic files are the actual content. The agent doesn&rsquo;t read them unless the index entry signals the content is relevant to the current task. That read is cheap because it&rsquo;s targeted and the file is small. If a topic file starts growing past a few hundred lines, that&rsquo;s a signal to split it, not to summarize it.</p>
 <p>Two tiers, because one tier doesn&rsquo;t work and three tiers are expensive. A single memory file grows without bound. A tree of topic files without an index turns every recall into a directory walk. Two tiers buy you the entire economy — the index is O(entries) to scan, the topic files are O(1) to fetch when named. You pay context budget only on the index, and the index is engineered to stay small.</p>
 <hr>
-<h2>Types of memory (and why they matter separately)</h2>
+<h2 id="types-of-memory-and-why-they-matter-separately">Types of memory (and why they matter separately)</h2>
 <p>Not all claims are the same kind. Mixing them means writing bad prompts about how to use the memory. Separating them means the agent can calibrate its own behavior with one rule per kind.</p>
 <p>I use four:</p>
 <ul>
@@ -53,7 +55,7 @@
 <li>The index entry is <strong>a hook, not a summary</strong>. &ldquo;Don&rsquo;t mock the database&rdquo; in the index, not &ldquo;In March 2024 the team decided to stop mocking the database after a migration failure caused by mock/prod divergence, details in topic file.&rdquo; The hook triggers the topic-file read when the agent is operating in adjacent territory.</li>
 </ul>
 <hr>
-<h2>Failure modes this prevents</h2>
+<h2 id="failure-modes-this-prevents">Failure modes this prevents</h2>
 <p>The pattern earned its structure from watching what fails without it.</p>
 <p>Context bloat. The naive &ldquo;append everything to a single file&rdquo; approach grows without limit. After forty sessions, the memory file is either too long to always load (you start truncating) or too long to read when loaded (context budget vanishes before the task starts). The two-tier split caps the always-loaded footprint at the index size, and the index is engineered to stay under two hundred lines.</p>
 <p>Stale memory acting as current. When memory grows without review, old facts accumulate alongside new ones, and the agent has no way to tell which is live. A two-tier system with per-topic files lets the agent (and you) treat staleness as the default and freshness as the exception — before acting on a recalled fact, the agent can verify it&rsquo;s still correct by reading the current state of the code or the resource the memory points to. This is a small behavioral rule (&ldquo;trust observation over memory when they conflict&rdquo;) that pays for itself immediately.</p>
@@ -61,7 +63,7 @@
 <p>Contradictions. The sibling of duplication. Memory A says &ldquo;the user prefers terse responses.&rdquo; Memory B says &ldquo;the user appreciates detailed explanations.&rdquo; Both are true in different contexts, but if the agent doesn&rsquo;t see them together, it applies one and not the other. The index makes contradictions surface-able — at write time, you can see the conflict and reconcile.</p>
 <p>Confidence drift. Long-running agents accumulate unverified beliefs. If the memory system doesn&rsquo;t distinguish between &ldquo;I wrote this down when the user told me&rdquo; versus &ldquo;I inferred this from context three sessions ago,&rdquo; confidence erodes silently. The &ldquo;why&rdquo; line in every feedback and project memory forces the provenance to be carried forward. If a belief has no why, it gets reviewed before it&rsquo;s acted on.</p>
 <hr>
-<h2>Implementation recipe</h2>
+<h2 id="implementation-recipe">Implementation recipe</h2>
 <p>The pattern is easy to implement because it&rsquo;s mostly a prompt-engineering convention and a file layout. Here&rsquo;s the shape.</p>
 <p><strong>Directory:</strong></p>
 <pre><code>memory/
@@ -121,28 +123,30 @@ Integration tests must hit a real database, not mocks.
 <li>If the memory is summary-level and the user&rsquo;s question is about specifics that weren&rsquo;t in the summary.</li>
 </ul>
 <hr>
-<h2>What pairs with it</h2>
+<h2 id="what-pairs-with-it">What pairs with it</h2>
 <p>The two-tier split is one primitive. A production agent system runs on a composition of primitives, and this section names the pairings I&rsquo;ve used in practice — without claiming the base pattern does work it doesn&rsquo;t, and without pretending the pairings don&rsquo;t exist.</p>
 <p>Semantic retrieval at scale. The index is scanned, not embedded. For most agent-memory catalogs — under a hundred entries per project — LLM scanning of a tight index is cheaper and higher-quality than vector search: the model already knows what&rsquo;s there, it just needs to recognize relevance. At larger scale (thousands of entries spanning multiple domains), a vector layer plugs in as a complementary retrieval path: the vector store returns candidate topic files, the index still carries the canonical <em>is-this-live</em> signal. The composition is vector-for-recall, index-for-arbitration. The base pattern doesn&rsquo;t need the vector layer until the catalog demands it; when it does, the layer attaches without restructuring the memory format.</p>
 <p>Cross-session task state. Memory is for facts you don&rsquo;t want to rediscover. Work-in-progress state — partially-completed tasks, open threads, pending decisions — lives in a separate file structure: a <code>STATE.md</code> per project, a shared <code>TASKS.md</code> for the workspace, checkpointed plan artifacts for active work. The two structures coexist cleanly. Memory carries the stable shape of what&rsquo;s <em>known</em>; state files carry the transient shape of what&rsquo;s <em>happening</em>. Mixing them is how chat scratchpads metastasize into every other data structure. Keeping them separate is how a long-running agent accumulates institutional knowledge without accumulating stale work-in-progress. In a production system you want both — they pair; they don&rsquo;t overlap.</p>
 <p>Staleness detection. Fully automatic staleness is hard because the universe changes faster than any timestamp can track — &ldquo;this memory is still true&rdquo; usually requires running the relevant verification in the current moment. The pragmatic pairing is a periodic reconciliation pass: a lightweight routine (human-triggered at phase boundaries, or scheduled) that walks the index, flags entries referencing removed code or dead resources, merges duplicates, prunes obsolete facts, and updates or deletes as needed. The routine doesn&rsquo;t need to be smart; it needs to run on a cadence. I run this at phase boundaries on my own work, and the index is engineered for fast scanning so the pass stays cheap.</p>
 <p>Multi-agent memory sharing. The pattern extends cleanly to an agent hierarchy. A director agent holds a workspace-level memory with the cross-project index; each sub-agent holds its own project-level memory keyed to its scope; the director hands down relevant context on dispatch and receives back update proposals from sub-agents that touched shared entries. The file-scope convention determines who reads what without requiring inter-agent locking or complex synchronization. This is the structure I run across a dozen AI-native projects under a unified agentic architecture — one workspace memory, many project memories, consistent index semantics throughout. The base pattern is single-agent-single-project; the extension to hierarchy is mechanical once the scope convention is set.</p>
 <hr>
-<h2>Structure is orthogonal to skills and tools</h2>
+<h2 id="structure-is-orthogonal-to-skills-and-tools">Structure is orthogonal to skills and tools</h2>
 <p>The two-tier split is one instance of a more general property the larger architecture depends on: structure is orthogonal to capability. The memory layer specifies how facts are organized. It says nothing about what the agent can <em>do</em> with them. At any layer of a production agent system — memory, orchestration, reasoning, output — skills and tools can be plugged in to augment or surpass what the LLM does natively.</p>
 <p>This matters because LLM native limitations move. The model that can&rsquo;t do X today may do X fluently in six months, but it also may not, and you shouldn&rsquo;t have to rearchitect around either outcome. A layered architecture where skills and tools slot in at any level lets the system stay correct regardless of which capabilities the LLM carries natively on any given day.</p>
 <p>Applied to memory: the two-tier pattern is indifferent to whether recall happens by the LLM scanning the index, by a vector-search tool, by a knowledge-graph traversal, or by a future LLM with the entire index in its context window. The structure is the same; the capability layer is swapped. The same principle applies to orchestration — role-tagged addressing works whether sub-agents are LLM calls, fine-tuned specialists, or hand-coded deterministic tools — and to every other layer of the system.</p>
 <p>That orthogonality is deliberate. It&rsquo;s what lets a production agent system survive the next capability shift without a rewrite, and it&rsquo;s why the patterns composed here hold up even as the model tier underneath changes out from under them.</p>
-<h2>The meta-point</h2>
+<h2 id="the-meta-point">The meta-point</h2>
 <p>Memory for agents is infrastructure, not a feature. The moment you treat it as a feature — &ldquo;the agent has memory now&rdquo; — you&rsquo;ve smuggled in assumptions about what memory is for, and those assumptions are usually about chat.</p>
 <p>Production agent memory is a protocol: write under this schema, read under this rule, reconcile under this convention. The two-tier split is the cheapest protocol that holds up across sessions without leaking. It&rsquo;s not the only one. It&rsquo;s the one I&rsquo;ve run across a dozen AI-native projects — cross-project director agents, investment research platforms, ML production pipelines — and it has never been the thing that broke. The things that break are above and below: task management, tool-use reliability, outbound-communication safety. Memory, once the two-tier discipline is in place, becomes the infrastructure you stop thinking about.</p>
 <p>Which is the right outcome. The infrastructure you stop thinking about is the infrastructure that&rsquo;s working.</p>
 <hr>
 <p><em>Daniel Higuera — AES Research — 2026</em></p>
 <p><em>Part of a series on agent architecture patterns. Upcoming: cross-project director agents, skeptic membranes, and the UAT residual-context-gap.</em></p>
-<footer>
-<p>AES Research · Houston, TX · 2026</p>
-</footer>
+<div class="post-footer"><p class="prev-next"><a href="distance-yes-and-no.html">&larr; Previous</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
 </main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
 </body>
 </html>

@@ -1,48 +1,46 @@
 # AES Research
 
-**AI R&D for long-horizon agentic systems.**
+<p class="subtitle">AI R&amp;D for long-horizon agentic systems</p>
 
-I build the architectural patterns that let multi-agent systems survive real production work — not demo runs, not controlled benchmarks, but the kind of long-horizon autonomous operation where context compounds, memory matters, and every autonomous output has to be verifiable before it goes anywhere.
+<p class="lede">I build the architectural patterns that let multi-agent systems survive real production work — not demo runs, not controlled benchmarks, but the kind of long-horizon autonomous operation where context compounds, memory matters, and every autonomous output has to be verifiable before it goes anywhere.</p>
+
+<p class="byline">Daniel Higuera · Houston · running AES Research as an independent R&amp;D program since 2017, in parallel with industrial R&amp;D leadership.</p>
 
 ---
 
-## What I work on
+## Read this first
 
-- **Two-tier memory architectures** that persist across 40+ agent sessions without context bloat
-- **Cross-project director agents** coordinating sub-agent swarms via role-tagged addressing and role-boundary self-monitoring
-- **UAT harnesses** that surface the residual context gap — the failure modes synthetic benchmarks miss
-- **Skeptic membranes** that enforce verifiable outputs and retained human authority on autonomous agent work
-- **Production ML pipelines** with factor capture, ensemble clustering, and multi-year out-of-sample validation
+<div class="featured-essay">
+  <p><strong><a href="writing/distance-yes-and-no.html">Calibration, boundary layers, and the distance between yes and no: a practitioner's geometry of LLM reliability</a></strong></p>
+  <p>The geometric framing that ties context decay, retrieval failure, memory architecture, and agent calibration into one system. The thesis the rest of the essays build on.</p>
+</div>
 
-## Writing
+## More writing
 
-- **[Calibration, boundary layers, and the distance between yes and no: a practitioner's geometry of LLM reliability](writing/distance-yes-and-no.html)** — the geometric framing that ties context decay, retrieval failure, memory architecture, and agent calibration into one system
 - **[The 6-tier agent maturity model: why most enterprise AI is failing on a calibration mismatch, not a tooling gap](writing/6-tier-maturity.html)** — a practitioner's tier ladder for self-locating an AI initiative, with the diagnostic that names the canonical enterprise failure in three questions
 - **[Two-tier memory for production agents: what chat systems don't tell you](writing/two-tier-memory.html)** — a working architecture for agents that need to remember across sessions without choking on their own context
 - **[The context window is a battery: surviving compaction on long-running agents](writing/context-window-battery.html)** — what happens to your calibration when the context fills up, why compaction drops the work you need most, and the discipline that protects you from it
 - **[Attention management: routing between native LLM capability and augmented skills and tools](writing/attention-management.html)** — the control plane that decides, at every step, where the work should happen
 
-More deep-dives in progress.
+[All writing &rarr;](writing/index.html)
 
 ## Skills
 
-Four reusable Claude Code skills that encode the patterns above as loadable instructions. Authored to be used directly (by a Claude Code session that has this repo cloned) and read independently as documentation of the decision rules each pattern formalizes.
+Four reusable Claude Code skills that encode the patterns from the writing as loadable instructions — the skeptic membrane, two-tier memory loader, attention router, and pattern-map identifier. Authored for direct use by a Claude Code session with this repo cloned.
 
-- **[`aes-skeptic-membrane`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-skeptic-membrane/SKILL.md)** — vet an autonomous agent output before it crosses the boundary
-- **[`aes-two-tier-memory`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-two-tier-memory/SKILL.md)** — scan an index + topic files and decide which entries to load
-- **[`aes-attention-routing`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-attention-routing/SKILL.md)** — route a step between native / tool / skill / sub-agent
-- **[`aes-pattern-map`](https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-pattern-map/SKILL.md)** — identify which patterns compose for an architecture question
+[Browse all skills &rarr;](skills.html)
 
-## Live demo
+## Try it
 
-**[Try the live architecture demo &rarr;](demo/)** Type a question and watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Backed by a Cloudflare Worker that keeps the API keys server-side and enforces the demo prompt; the worker source is open at [/worker/](worker/).
+- **[Ask the Q&A agent &rarr;](ask.html)** — answers grounded in the published essays, with citations.
+- **[Live architecture demo &rarr;](demo/)** — watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Worker source open at [/worker/](worker/).
 
 ---
 
 ## About
 
-AES Research is the independent R&D program of **Daniel Higuera**, run since 2017 in parallel with industrial R&D leadership at Hitachi Energy (grid-planning and wholesale-market software for North American ISOs and utilities). The work spans 12+ AI-native projects under a unified agentic architecture.
+AES Research is the independent R&D program of **Daniel Higuera**, run since 2017 alongside industrial R&D leadership. Twenty years of professional experience across energy markets, production ML, and industrial software. The current body of work spans 12+ AI-native projects under a unified director-agent architecture.
 
-Twenty years of professional experience across energy markets, production ML, and industrial software. AI and ML expertise developed independently over 15+ years, predating formal academic curricula for most modern sub-disciplines.
+[More about AES Research →](about.html)
 
-[LinkedIn](https://www.linkedin.com/in/daniel-higuera-09053925) · Résumé available on request · Contact via LinkedIn or email
+[LinkedIn](https://www.linkedin.com/in/daniel-higuera-09053925) · [Contact](contact.html)

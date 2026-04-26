@@ -12,9 +12,14 @@ pattern = "api.aesresearch.ai/*"
 zone_name = "aesresearch.ai"
 
 # Secrets (do NOT put values here — use `wrangler secret put <NAME>`):
-#   ANTHROPIC_API_KEY   — Anthropic API key
-#   ROUTINE_URL         — full routine /fire URL (optional; only needed for /api/fire-routine)
-#   ROUTINE_TOKEN       — routine bearer token (optional; only needed for /api/fire-routine)
+#   ANTHROPIC_API_KEY      — Anthropic API key
+#   ROUTINE_URL            — full routine /fire URL (optional; only needed for /api/fire-routine)
+#   ROUTINE_TOKEN          — routine bearer token (optional; only needed for /api/fire-routine)
+#   TURNSTILE_SECRET_KEY   — Cloudflare Turnstile secret key (optional; /contact skips verify if unset)
+#
+# /ask + /ask-deep specific secrets (same ROUTINE_URL + ROUTINE_TOKEN are reused for /ask-deep):
+#   No additional secrets needed — /ask uses ANTHROPIC_API_KEY; /ask-deep fires the existing
+#   ROUTINE_URL / ROUTINE_TOKEN with a different prompt payload. Budget tracking uses WORKER_BUDGET KV.
 
 [vars]
 # Non-secret build-time vars (none yet)
@@ -23,6 +28,19 @@ zone_name = "aesresearch.ai"
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "c82fd26550cf4a35bde82d61fa21a28b"
+
+# Shared daily budget ceiling across all Anthropic API consumers (/chat, /ask)
+# plus daily Routine-fire counter (/fire-routine, /ask-deep).
+# Keys: daily_spend:YYYY-MM-DD (cents), routine_fires:YYYY-MM-DD (count). TTL 48hr.
+[[kv_namespaces]]
+binding = "WORKER_BUDGET"
+id = "1b74395677b742ff917ac05ec0516db1"
+
+# Outbound email binding for /contact. Must match the Email Routing zone address.
+# Requires Email Routing to be enabled and contact@aesresearch.ai to be a verified address.
+[[send_email]]
+name = "SEND_EMAIL"
+destination_address = "contact@aesresearch.ai"
 
 # Per-request analytics (pathname, status, ip prefix, latency). Queryable via Cloudflare SQL API.
 # Pending: the Workers API token needs "Account Analytics: Edit" permission added before this

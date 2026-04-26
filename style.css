@@ -13,7 +13,7 @@
     --fg: #e6e6e6;
     --bg: #141414;
     --muted: #a8a8a8;
-    --rule: #333;
+    --rule: #484848;       /* was #333 — needed 3:1 vs --bg for WCAG 1.4.11 */
     --accent: #7ba9e0;
     --code-bg: #1f1f1f;
     --code-fg: #e0e0e0;
@@ -70,15 +70,78 @@ header .tagline {
 }
 
 h1, h2, h3, h4 {
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
   font-weight: 600;
+}
+
+/* H1 on a content page (not in <header>) is the page title — give it more presence */
+main > h1,
+main > article > h1,
+body > main h1:first-of-type {
+  font-size: 2.125rem;
+  letter-spacing: -0.022em;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+/* Hero tagline — sits directly under the page H1 as a real subtitle. */
+.subtitle {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: -0.005em;
+  margin: 0 0 2rem;
+}
+
+/* Lede paragraph — the longer hero intro right under the subtitle. Slightly
+   larger than body, slightly more breath. Carries the visual weight of an opener. */
+.lede {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  margin: 0 0 1.25rem;
+}
+
+/* Author byline — italic, muted, small. Anchors who is behind the work without
+   shouting. Sits between the lede and the first section H2. */
+.byline {
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0 0 0.5rem;
+}
+
+/* Featured-essay callout — uses left accent rule + slightly larger title.
+   Sits under the "Read this first" H2 as the primary CTA. */
+.featured-essay {
+  margin: 1.5rem 0 2.5rem;
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  border-left: 3px solid var(--accent);
+}
+
+.featured-essay p:first-child {
+  margin-top: 0;
+}
+
+.featured-essay p:first-child strong a {
+  font-size: 1.125rem;
+  letter-spacing: -0.005em;
+}
+
+.featured-essay p:last-child {
+  margin-bottom: 0;
+  color: var(--fg);
 }
 
 h2 {
   font-size: 1.375rem;
-  margin: 3rem 0 1rem;
-  padding-top: 0.5rem;
+  margin: 4.5rem 0 1.25rem;
+  padding-top: 0;
+}
+
+/* First H2 in a page sits closer — no need for extra space at the top */
+main > h2:first-of-type {
+  margin-top: 3rem;
 }
 
 h3 {
@@ -109,10 +172,14 @@ a {
 
 a:hover { border-bottom-color: var(--accent); }
 
+/* Visible <hr> between sections is too heavy — most lab sites let H2 spacing carry
+   the divide. Reduce the rule to a subtle accent only when explicitly used. */
 hr {
   border: none;
   border-top: 1px solid var(--rule);
-  margin: 3rem 0;
+  margin: 4rem auto;
+  width: 6rem;
+  opacity: 0.5;
 }
 
 blockquote {
@@ -130,6 +197,19 @@ code {
   color: var(--code-fg);
   padding: 0.1em 0.35em;
   border-radius: 3px;
+}
+
+/* When a code element is the only or primary content of a list item (skill/release names),
+   render it as a typographic chip — borderless, slightly weightier, integrated with prose. */
+li > strong > a > code,
+li > a > code,
+.skill-card h2 > code,
+li > code:first-child {
+  background: transparent;
+  padding: 0;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: inherit;
 }
 
 pre {
@@ -168,11 +248,20 @@ em { font-style: italic; }
 }
 
 footer {
-  margin-top: 4rem;
+  margin-top: 6rem;
   padding-top: 2rem;
   border-top: 1px solid var(--rule);
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+}
+
+footer p {
+  margin: 0 0 0.4rem;
+}
+
+footer p:last-child {
+  margin-bottom: 0;
 }
 
 .byline {
@@ -184,6 +273,451 @@ footer {
 .article-meta {
   color: var(--muted);
   font-size: 0.9rem;
-  margin-top: -0.5rem;
-  margin-bottom: 2.5rem;
+  margin: -0.5rem 0 2.5rem;
+}
+
+.nav .sep {
+  color: var(--muted);
+  margin: 0 0.4rem;
+}
+
+.post-footer {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.prev-next {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.prev-next a {
+  color: var(--accent);
+}
+
+.wayfinding {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Contact form (used by /contact/) */
+.contact-form {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-form label {
+  font-size: 0.95rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form select,
+.contact-form textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.75rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.contact-form textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.contact-form .honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-form button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+@media (max-width: 480px) {
+  .contact-form button {
+    width: 100%;
+    align-self: stretch;
+  }
+  .ask-submit-button,
+  .ask-deep-button {
+    width: 100%;
+  }
+  .ask-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ask-deep-dialog-buttons {
+    flex-wrap: wrap;
+  }
+  .ask-deep-dialog-buttons button {
+    width: 100%;
+  }
+}
+
+.contact-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contact-form .form-status {
+  font-size: 0.95rem;
+  color: var(--muted);
+  min-height: 1.5em;
+}
+
+.contact-form .form-status.error {
+  color: #b33;
+}
+
+.contact-form .form-status.success {
+  color: #2a7a3a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .contact-form .form-status.error {
+    color: #ff8c8c;
+  }
+  .contact-form .form-status.success {
+    color: #7dc88f;
+  }
+}
+
+/* Skill cards (used on /skills/) */
+.skill-card {
+  margin: 2rem 0;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--rule);
+}
+
+.skill-card:first-of-type {
+  border-top: none;
+}
+
+.skill-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.skill-card .skill-when {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0.5rem 0;
+}
+
+.skill-card .skill-link {
+  font-size: 0.95rem;
+}
+
+/* Essay rows (used on /writing/) */
+.essay-row {
+  margin: 1.5rem 0;
+}
+
+.essay-row .essay-title {
+  display: block;
+  font-weight: 600;
+}
+
+.essay-row .essay-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.essay-row .essay-summary {
+  margin: 0.5rem 0 0;
+}
+
+/* Keyboard focus — visible outline on links and form controls (WCAG 2.4.7).
+   :focus-visible only triggers for keyboard navigation, not mouse clicks, so
+   sighted mouse users don't see the outline on every click. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.contact-form input:focus-visible,
+.contact-form select:focus-visible,
+.contact-form textarea:focus-visible {
+  outline-offset: 0;
+}
+
+/* Dark-mode form inputs need a stronger border for WCAG 1.4.11 non-text contrast */
+@media (prefers-color-scheme: dark) {
+  .contact-form input[type="text"],
+  .contact-form input[type="email"],
+  .contact-form select,
+  .contact-form textarea {
+    border-color: #707070;        /* 3:1 contrast vs --bg in dark mode */
+  }
+  .contact-form button {
+    color: var(--bg);             /* was #fff — failed AA on light-blue accent */
+    font-weight: 600;
+  }
+  .ask-submit-button {
+    color: var(--bg);
+    font-weight: 600;
+  }
+}
+
+/* ---------- /ask Q&A widget ---------- */
+
+.ask-widget {
+  margin: 2rem 0;
+}
+
+.ask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ask-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ask-label {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.ask-textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 6rem;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ask-charcount {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.ask-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ask-submit-button,
+.ask-deep-button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+}
+
+.ask-submit-button {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ask-deep-button {
+  background: transparent;
+  color: var(--accent);
+}
+
+.ask-submit-button:disabled,
+.ask-deep-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ask-optional {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.ask-status {
+  font-size: 0.95rem;
+  color: var(--muted);
+  min-height: 1.5em;
+}
+
+.ask-status-error {
+  color: #b33;
+}
+
+.ask-transcript {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ask-message-user,
+.ask-message-agent {
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+}
+
+.ask-message-user {
+  background: var(--code-bg);
+  font-style: italic;
+  color: var(--muted);
+}
+
+.ask-message-agent {
+  background: var(--bg);
+}
+
+.ask-message-agent p:last-child {
+  margin-bottom: 0;
+}
+
+.ask-citation-row {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ask-citation {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: help;
+  text-decoration: none;
+  background: var(--bg);
+}
+
+.ask-citation:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.ask-escalate-note {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--code-bg);
+  border-left: 3px solid var(--accent);
+  font-size: 0.95rem;
+}
+
+.ask-escalate-deep-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.ask-deep-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.ask-deep-dialog {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1.5rem 1.75rem;
+  max-width: 32rem;
+  width: 100%;
+}
+
+.ask-deep-dialog-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.ask-deep-dialog-body {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.ask-deep-email-input {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+.ask-deep-dialog-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.ask-deep-cancel-button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.55rem 1.1rem;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ask-textarea,
+  .ask-deep-email-input {
+    border-color: #707070;
+  }
+  .ask-status-error {
+    color: #ff8c8c;
+  }
 }

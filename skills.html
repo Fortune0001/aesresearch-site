@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skills — AES Research</title>
+  <meta name="description" content="Reusable Claude Code skills that encode the patterns from the writing as loadable instructions.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="index.html">&larr; AES Research</a></nav>
+<main>
+<h1 id="skills">Skills</h1>
+<p><em>Reusable Claude Code skills that encode the patterns from the writing as loadable instructions.</em></p>
+<p>Four skills authored for direct use by a Claude Code session with this repo cloned. Each encodes a decision rule from production — not as prose guidance but as executable instructions the model loads and runs.</p>
+<p>These are independent artifacts, free to use, fork, and adapt. They&rsquo;re also a substrate. The architectural thinking that makes them effective in production lives in <a href="writing/index.html">the writing</a> — they compose under that thinking. Loaded in isolation they produce partial behavior; the calibration comes from the composition. Treat them as building blocks, not finished systems.</p>
+<hr>
+<h2 id="aes-skeptic-membrane"><code>aes-skeptic-membrane</code></h2>
+<p>Vet an autonomous agent output before it crosses the boundary — file write, API call, message send.</p>
+<p><strong>What it does:</strong> runs a two-layer check on any outbound artifact: first a surface scan for obvious violations, then a read-as-skeptic pass that applies the same scrutiny a well-calibrated human reviewer would. Flags borderline outputs for explicit user decision rather than silently passing or silently blocking.</p>
+<p><strong>When to use:</strong> at the boundary between an autonomous agent and any external destination. Mandatory before any output that cannot be recalled — sent emails, published posts, committed files, API mutations.</p>
+<p><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-skeptic-membrane/SKILL.md">View on GitHub →</a></p>
+<hr>
+<h2 id="aes-two-tier-memory"><code>aes-two-tier-memory</code></h2>
+<p>Scan an index and topic files, then decide which entries to load into context for the current task.</p>
+<p><strong>What it does:</strong> implements the two-tier memory pattern described in the <a href="writing/two-tier-memory.html">writing</a>. Reads the MEMORY.md index first, selects only the entries relevant to the current task, then loads the referenced topic files — keeping context load proportional to what the task actually needs.</p>
+<p><strong>When to use:</strong> when the agent has a memory store available and the full store would exceed a useful context fraction. Prevents the context-bloat failure mode that accumulates across long-running sessions.</p>
+<p><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-two-tier-memory/SKILL.md">View on GitHub →</a></p>
+<hr>
+<h2 id="aes-attention-routing"><code>aes-attention-routing</code></h2>
+<p>Route a unit of work to the right execution tier: native model capability, tool call, loaded skill, or sub-agent dispatch.</p>
+<p><strong>What it does:</strong> makes the routing decision explicit before each non-trivial step. Evaluates the work unit against four tiers and selects the one with the best accuracy/cost/latency tradeoff for that specific step. The decision and its rationale are surfaced, not implicit.</p>
+<p><strong>When to use:</strong> before any step where the routing choice is non-obvious — particularly in multi-agent or multi-tool systems where the wrong tier costs context, money, or latency without surfacing the error.</p>
+<p><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-attention-routing/SKILL.md">View on GitHub →</a></p>
+<hr>
+<h2 id="aes-pattern-map"><code>aes-pattern-map</code></h2>
+<p>Given an architecture question, identify which patterns compose to address it and how they relate.</p>
+<p><strong>What it does:</strong> takes a concrete agent-system task or design question and maps it against the pattern library — skeptic membrane, two-tier memory, attention routing, director-agent topology, residual context gap detection. Returns the relevant composition and flags any ordering dependencies.</p>
+<p><strong>When to use:</strong> at the architecture-design phase of a new agent system, or when explaining an existing one. Useful both as a design tool and as a communication tool when the audience needs to understand why the system is structured the way it is.</p>
+<p><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-pattern-map/SKILL.md">View on GitHub →</a></p>
+</main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
+</body>
+</html>

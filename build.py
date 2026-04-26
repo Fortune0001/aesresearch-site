@@ -90,36 +90,124 @@ DESC_RE = re.compile(r"^\*(.+)\*$", re.MULTILINE)
 def extract_title_and_description(md: str) -> tuple[str, str]:
     title_match = TITLE_RE.search(md)
     title = title_match.group(1).strip() if title_match else "AES Research"
-    # description: first italicized line after the title, if any
+    # description: first italicized OR bold line after the title.
+    # DESC_RE matches both `*X*` and `**X**` (it captures the inner content). For
+    # bold input, the captured group is `*X*` — strip leading/trailing asterisks
+    # so the meta description doesn't render literal stars.
     desc = ""
     if title_match:
         after_title = md[title_match.end():]
         desc_match = DESC_RE.search(after_title)
         if desc_match:
-            desc = desc_match.group(1).strip()
+            desc = desc_match.group(1).strip().strip("*").strip()
     return title, desc
 
 
-def make_nav(is_article: bool) -> str:
-    if is_article:
-        return '<div class="nav"><a href="../index.html">&larr; AES Research</a></div>\n'
+def word_count(md_text: str) -> int:
+    text = re.sub(r"```.*?```", "", md_text, flags=re.DOTALL)
+    text = re.sub(r"`[^`]*`", "", text)
+    text = re.sub(r"[#*_>\-\[\]\(\)!]", " ", text)
+    return len([w for w in text.split() if w])
+
+
+def reading_time_min(md_text: str) -> int:
+    return max(1, round(word_count(md_text) / 220))
+
+
+def file_dates(path: Path) -> tuple[str, str]:
+    """Return (published_iso, updated_iso) as YYYY-MM-DD; git log first/last commit, mtime fallback."""
+    first, last = "", ""
+    try:
+        out = subprocess.run(
+            ["git", "log", "--diff-filter=A", "--follow", "--format=%aI", "--", str(path.name)],
+            cwd=path.parent, capture_output=True, text=True, check=False
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            first = out.stdout.strip().splitlines()[-1]
+        out2 = subprocess.run(
+            ["git", "log", "-1", "--format=%aI", "--", str(path.name)],
+            cwd=path.parent, capture_output=True, text=True, check=False
+        )
+        if out2.returncode == 0 and out2.stdout.strip():
+            last = out2.stdout.strip()
+    except Exception:
+        pass
+    if not first or not last:
+        from datetime import datetime, timezone
+        ts = path.stat().st_mtime
+        iso = datetime.fromtimestamp(ts, tz=timezone.utc).date().isoformat()
+        first = first or iso
+        last = last or iso
+    return first[:10], last[:10]
+
+
+def make_nav(kind: str, root_path: str = "index.html") -> str:
+    """Render the top-of-page nav as a real <nav> landmark.
+    kind: 'home' (no nav) | 'subpage' (back-link only) | 'essay' (back + breadcrumb)
+    root_path: path to root index.html, relative to the rendered page.
+    """
+    if kind == "essay":
+        return ('<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a>'
+                ' <span class="sep">/</span> <a href="index.html">Writing</a></nav>\n')
+    if kind == "subpage":
+        return f'<nav class="nav" aria-label="Breadcrumb"><a href="{root_path}">&larr; AES Research</a></nav>\n'
     return ""
 
 
-def render_md(src: Path, dst: Path, css_rel: str, is_article: bool) -> None:
+def render_md(src: Path, dst: Path, css_rel: str, is_article: bool,
+              prev_slug: str | None = None, next_slug: str | None = None,
+              nav_kind: str | None = None, nav_root: str = "index.html") -> None:
     md_text = src.read_text(encoding="utf-8")
     title, desc = extract_title_and_description(md_text)
     body_html = markdown.markdown(
         md_text,
-        extensions=["fenced_code", "tables", "smarty"],
+        extensions=["fenced_code", "tables", "smarty", "toc"],
         output_format="html5",
     )
+
+    if is_article:
+        published, updated = file_dates(src)
+        rt = reading_time_min(md_text)
+        meta = f'<p class="article-meta">Published {published}'
+        if updated and updated != published:
+            meta += f' · Updated {updated}'
+        meta += f' · {rt} min read</p>'
+        body_html = re.sub(r"(</h1>)", r"\1\n" + meta, body_html, count=1)
+
+        nav_links = []
+        if prev_slug:
+            nav_links.append(f'<a href="{prev_slug}.html">&larr; Previous</a>')
+        if next_slug:
+            nav_links.append(f'<a href="{next_slug}.html">Next &rarr;</a>')
+        prev_next = (f'<p class="prev-next">{" · ".join(nav_links)}</p>'
+                     if nav_links else "")
+        wayfinding = ('<p class="wayfinding">AES Research is a public lab for '
+                      'agent-system patterns from production. '
+                      '<a href="index.html">More writing &rarr;</a></p>')
+        body_html += f'\n<div class="post-footer">{prev_next}{wayfinding}</div>'
+
+    # Default nav resolution: essay → essay breadcrumb; non-essay subpages get a
+    # plain back-link unless caller overrides; root index gets nothing.
+    if nav_kind is None:
+        if is_article:
+            nav_kind = "essay"
+        elif dst.name == "index.html" and dst.parent == SITE:
+            nav_kind = "home"
+        else:
+            nav_kind = "subpage"
+    # Page title pattern: "Page Title — AES Research" (except for the home index,
+    # which is just "AES Research"). Improves WCAG 2.4.2 distinctness across pages
+    # and makes browser tabs / OG embeds readable.
+    is_home = (dst.name == "index.html" and dst.parent == SITE)
+    title_full = title if (is_home or title == "AES Research") else f"{title} — AES Research"
     html = LAYOUT.format(
         title=title,
+        title_full=title_full,
         description=desc,
         css_path=css_rel,
-        nav=make_nav(is_article),
+        nav=make_nav(nav_kind, root_path=nav_root),
         body=body_html,
+        footer_tagline="",
     )
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(html, encoding="utf-8")
@@ -128,14 +216,41 @@ def render_md(src: Path, dst: Path, css_rel: str, is_article: bool) -> None:
 
 def build() -> None:
     print("build:")
+    # Regenerate worker corpus from markdown sources before rendering HTML
+    result = subprocess.run(
+        [sys.executable, str(SITE / "build_corpus.py")],
+        cwd=SITE, capture_output=False, text=True, check=False,
+    )
+    if result.returncode != 0:
+        print(f"  WARNING: build_corpus.py exited {result.returncode} — continuing build")
     # Landing page
     render_md(SITE / "index.md", SITE / "index.html", "style.css", is_article=False)
+    # Contact page (if present)
+    if (SITE / "contact.md").exists():
+        render_md(SITE / "contact.md", SITE / "contact.html", "style.css", is_article=False)
+    # Ask / Q&A page (if present)
+    if (SITE / "ask.md").exists():
+        render_md(SITE / "ask.md", SITE / "ask.html", "style.css", is_article=False)
+    # Pillar pages
+    if (SITE / "skills.md").exists():
+        render_md(SITE / "skills.md", SITE / "skills.html", "style.css", is_article=False)
+    if (SITE / "about.md").exists():
+        render_md(SITE / "about.md", SITE / "about.html", "style.css", is_article=False)
+    # Writing index lives in writing/ subdirectory so it shares URL space with the essays
+    if (SITE / "writing-index.md").exists():
+        (SITE / "writing").mkdir(exist_ok=True)
+        render_md(SITE / "writing-index.md", SITE / "writing" / "index.html", "../style.css",
+                  is_article=False, nav_kind="subpage", nav_root="../index.html")
     # Writing
     writing = SITE / "writing"
     if writing.exists():
-        for md_path in sorted(writing.glob("*.md")):
+        essays = sorted(writing.glob("*.md"))
+        for i, md_path in enumerate(essays):
             html_path = md_path.with_suffix(".html")
-            render_md(md_path, html_path, "../style.css", is_article=True)
+            prev_slug = essays[i-1].stem if i > 0 else None
+            next_slug = essays[i+1].stem if i < len(essays) - 1 else None
+            render_md(md_path, html_path, "../style.css", is_article=True,
+                      prev_slug=prev_slug, next_slug=next_slug)
     # Ensure .nojekyll
     (SITE / ".nojekyll").touch()
     # CNAME only when --with-cname is passed; otherwise site serves at github.io default
@@ -170,7 +285,9 @@ def deploy() -> None:
     else:
         run("git", "remote", "add", "origin", remote_url)
     # Ensure user identity for commit (repo-scoped)
-    run("git", "config", "user.email", "daniel@aesresearch.ai")
+    # Use contact@aesresearch.ai for commit author — matches the address that's
+    # actually routable via Cloudflare Email Routing. daniel@ has no MX route.
+    run("git", "config", "user.email", "contact@aesresearch.ai")
     run("git", "config", "user.name", "Daniel Higuera")
     # Stage + commit
     run("git", "add", "-A")

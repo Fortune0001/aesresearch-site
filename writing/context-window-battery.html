@@ -3,61 +3,65 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The context window is a battery: surviving compaction on long-running agents</title>
+  <title>The context window is a battery: surviving compaction on long-running agents — AES Research</title>
   <meta name="description" content="What happens to your calibration when the context fills up, why compaction drops the work you need most, and the operational discipline that protects you from it.">
   <link rel="stylesheet" href="../style.css">
   <link rel="icon" href="data:,">
 </head>
 <body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a> <span class="sep">/</span> <a href="index.html">Writing</a></nav>
 <main>
-<div class="nav"><a href="../index.html">&larr; AES Research</a></div>
-<h1>The context window is a battery: surviving compaction on long-running agents</h1>
+<h1 id="the-context-window-is-a-battery-surviving-compaction-on-long-running-agents">The context window is a battery: surviving compaction on long-running agents</h1>
+<p class="article-meta">Published 2026-04-21 · Updated 2026-04-26 · 7 min read</p>
 <p><em>What happens to your calibration when the context fills up, why compaction drops the work you need most, and the operational discipline that protects you from it.</em></p>
 <hr>
-<h2>The battery</h2>
+<h2 id="the-battery">The battery</h2>
 <p>The context window is a battery. Every token the agent consumes drains it: your instructions, the conversation history, the files it reads, the output from sub-agents, every turn of the interaction. When the battery runs out, the agent compacts — it summarizes its own history to free up space. That compaction is what kills long-running work if you haven&rsquo;t planned for it.</p>
 <p>Think about a circular saw running on a battery pack. It doesn&rsquo;t warn you two minutes before it dies. There&rsquo;s no low-power indicator that gradually slows the blade. It cuts. And then it cuts out. Whatever you were in the middle of is now mangled — a ragged edge on a cut that should have been clean. That&rsquo;s what compaction does to agents mid-task. No graceful degradation. One moment the agent has your full calibration in context, the next moment it doesn&rsquo;t, and the work continues on a summary that threw away the parts you needed.</p>
 <p>This is solvable. But only if you understand what compaction actually does.</p>
-<h2>Compaction is lossy</h2>
+<h2 id="compaction-is-lossy">Compaction is lossy</h2>
 <p>Compaction is lossy compression. That&rsquo;s the term of the trade. It&rsquo;s not a zip file where everything comes back perfectly when you unzip. It&rsquo;s a JPEG. It keeps the big shapes and throws away the fine detail.</p>
 <p>What gets kept? The middle of the agent&rsquo;s understanding. The parts of the training distribution it knows well. Standard patterns, common workflows, the shape of the conversation rather than its specifics. The agent compacts based on what it <em>understands</em>, not based on what you <em>need it to remember</em>.</p>
 <p>What gets dropped? The tails. Novel territory. The calibration you built for tail-end work. The skeptic rubrics you configured. The specific boundary conditions you worked out over twenty turns. All the fine detail you accumulated in the session — the stuff that turned a generic agent into your calibrated collaborator — that&rsquo;s the JPEG artifact. That&rsquo;s what the compaction algorithm treats as fluff, because the algorithm doesn&rsquo;t know the difference between fluff and hard-won precision at the tails.</p>
 <p>The failure mode is predictable. You spend an hour calibrating the agent to your domain — correcting its confident wrong answers, establishing conventions, teaching it the distinctions your domain depends on. That calibration lives in conversation history. Compaction fires. The calibration gets compressed down to &ldquo;the user prefers X&rdquo; and the specifics evaporate. The next response is back to generic-agent defaults, and you don&rsquo;t notice at first, because the agent is confident and the format looks right.</p>
-<h2>Atomic writes</h2>
+<h2 id="atomic-writes">Atomic writes</h2>
 <p>The fix is to write your calibration out of the volatile context window and into persistent files before compaction hits. Every calibrated procedure, every skeptic rubric, every boundary-layer configuration, every convention that works — all of it goes to disk while it&rsquo;s still fresh in context.</p>
 <p>Use the word <em>atomic</em> deliberately. Atomic writes mean you write to a temporary file first, then move that temp file to the permanent location. Term of the trade in file systems and databases. The reason it matters: if compaction fires while the agent is mid-write on a memory file, you can end up with a half-written file that&rsquo;s worse than no file at all. Temp file first, commit second. Always.</p>
 <p>I&rsquo;ve tested this. I&rsquo;ve had agents corrupt their own memory files because they were doing a direct write when compaction fired. The agent comes back after compaction, tries to read its memory, and the file is garbage. Now you&rsquo;ve lost both the context window content <em>and</em> the persistent memory. You&rsquo;re starting from scratch. Atomic writes exist specifically to make this failure mode impossible — the permanent file is never in a partial state.</p>
-<h2>Two memory types, different cadences</h2>
+<h2 id="two-memory-types-different-cadences">Two memory types, different cadences</h2>
 <p>Not all calibration saves at the same tempo.</p>
 <p><strong>Procedural memory</strong> is task-specific. How to interact with a given system, how to structure a kind of deliverable, what works for a specific workflow. These save when you finish calibrating a procedure and confirm it holds. You don&rsquo;t save procedural memory every five minutes. You save it when the procedure is locked.</p>
 <p><strong>Introspective memory</strong> is session-level. What the agent has learned about you, about your conventions, about how it operates with you. How much detail you want in responses. Your vocabulary. Your domain focus. How you dispatch sub-agents. These accumulate across the conversation and save at a faster cadence — every time the agent learns something new about how to work with you, that&rsquo;s introspective memory, and it should be flushing to disk regularly throughout the session.</p>
 <p>If you only save one type, you lose the other when compaction hits. Procedural saves alone give you the &ldquo;how&rdquo; but not the &ldquo;for whom.&rdquo; Introspective saves alone give you the register but not the procedures. Both need their own files, their own cadence, and their own atomic-write discipline.</p>
-<h2>The pre-post compaction test</h2>
+<h2 id="the-pre-post-compaction-test">The pre-post compaction test</h2>
 <p>Compaction damage is measurable. You don&rsquo;t have to guess where the calibration got lost.</p>
 <p>Before compaction fires, ask the agent to summarize a nuanced topic from your session. Something at the tails — something that required calibration to get right, something that&rsquo;s not in the middle of the distribution. Have it give you the detailed version. Save the summary somewhere outside the context window.</p>
 <p>After compaction fires, ask the exact same question. Compare the two responses. Where did the agent drift? What did it forget? What did it simplify? What did it state confidently that&rsquo;s actually wrong now?</p>
 <p>Those drift points are where your calibration was lost. That&rsquo;s where the compaction damage landed. And the test is repeatable — you can run it every time compaction happens, and it tells you exactly what to re-inject from your memory files to get the agent back on track.</p>
 <p>The reason this works: compaction compresses based on the agent&rsquo;s understanding, and at the tails it doesn&rsquo;t understand what&rsquo;s important and what&rsquo;s fluff. It makes bad decisions about what to keep and what to throw away. The pre-post test exposes exactly where those bad decisions landed.</p>
-<h2>Sub-agent response discipline</h2>
+<h2 id="sub-agent-response-discipline">Sub-agent response discipline</h2>
 <p>The fastest way to drain the battery is to let your sub-agents return book reports.</p>
 <p>Every token a sub-agent wastes is a token you don&rsquo;t have for actual work. Every two-page summary that comes back from a sub-agent gets consumed by your main agent. It drains the battery. Multiply that by twenty sub-agent dispatches in a session and you&rsquo;ve burned a huge fraction of your context window on fluff — which pulls you closer to compaction, and when compaction fires, the book reports survive (they&rsquo;re in the middle of the distribution; the compaction algorithm recognizes their shape) while your tail-end calibration dies.</p>
 <p>The discipline is simple: train your sub-agents to be concise. A sub-agent that does work and returns ten tokens is worth twenty that return book reports.</p>
 <p>Concrete tactic: specify the response format in the dispatch instructions. Don&rsquo;t just tell the sub-agent what to do. Tell it how to respond. &ldquo;Respond with the file path and the word done.&rdquo; &ldquo;Respond with pass or fail and nothing else.&rdquo; &ldquo;Respond with the count only.&rdquo; If you leave the output format open, you&rsquo;ll get book reports by default, because the model&rsquo;s training pushes it toward helpful-sounding verbose responses. You have to calibrate that out explicitly.</p>
 <p>This isn&rsquo;t about being curt with the sub-agent. It&rsquo;s about context window survival. Every token matters when you&rsquo;re managing a battery.</p>
-<h2>Recovery: RAG back into your own memory</h2>
+<h2 id="recovery-rag-back-into-your-own-memory">Recovery: RAG back into your own memory</h2>
 <p>Once you&rsquo;ve taken the pre-post compaction test and identified the damage, recovery is mechanical. You have your memory files. The agent reads its own saved calibration, its own saved procedures, and it reconstructs the understanding that got compacted out. RAG, but pointed at your own persistent memory rather than an external corpus.</p>
 <p>This is why atomic writes are the safety net that has to hold. If the memory files are corrupt or incomplete, there&rsquo;s nothing to RAG back into. The whole recovery chain depends on having clean, complete memory files on disk. That&rsquo;s the safety net — and it only works if the discipline was in place <em>before</em> you needed it.</p>
 <p>The ordering matters. You don&rsquo;t build the safety net during the fall.</p>
-<h2>Bringing it together</h2>
+<h2 id="bringing-it-together">Bringing it together</h2>
 <p>The context window is a battery. Compaction is lossy compression that drops the tails first. Atomic writes protect your calibration from being lost mid-flight. Procedural and introspective memory need saving on different cadences. The pre-post compaction test measures the damage. Sub-agent response discipline extends battery life. And the recovery path — RAG back into your own memory — only exists if the atomic-write discipline held from the start.</p>
 <p>None of this is optional on a long-running agent. The failure mode isn&rsquo;t &ldquo;the agent is confused;&rdquo; it&rsquo;s &ldquo;the agent confidently operates on a summary that threw away your calibration, and the output looks fine until it doesn&rsquo;t.&rdquo;</p>
 <p>This pattern pairs with the two-tier memory architecture: memory files are <em>what</em> you save, and atomic writes + cadenced saves are <em>when</em> and <em>how</em>. It pairs with attention management: knowing which sub-agent calls are cheap enough to justify the battery cost is an attention-routing decision. The patterns compose into a working system. In isolation, none of them survives real use.</p>
 <hr>
 <p><em>Daniel Higuera — AES Research — 2026</em></p>
 <p><em>Part of a series on agent architecture patterns. See also: <a href="two-tier-memory.html">Two-tier memory for production agents</a> and <a href="attention-management.html">Attention management</a>. The video version of this material is session 05 of the AI 101 curriculum — contact for access.</em></p>
-<footer>
-<p>AES Research · Houston, TX · 2026</p>
-</footer>
+<div class="post-footer"><p class="prev-next"><a href="attention-management.html">&larr; Previous</a> · <a href="distance-yes-and-no.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
 </main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
 </body>
 </html>

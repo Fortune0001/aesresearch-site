@@ -1,0 +1,16 @@
+name = "aesresearch-email-ack"
+main = "worker.js"
+compatibility_date = "2026-04-26"
+account_id = "e00e0d2d49239b8a758f229badf2594e"
+# Email Worker — triggered by Email Routing rule in the Cloudflare dashboard,
+# not by HTTP routes. No workers.dev subdomain needed.
+workers_dev = false
+
+# Per-sender rate limit + daily global circuit breaker
+[[kv_namespaces]]
+binding = "AUTO_ACK_KV"
+id = "04ac77cc58bc441b891b6d897d027890"
+
+# This Worker is bound to Email Routing in the Cloudflare dashboard.
+# Routing rule: contact@aesresearch.ai → "Send to a Worker" → aesresearch-email-ack
+# Daniel will configure this binding via the dashboard after deployment.

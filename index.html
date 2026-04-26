@@ -4,51 +4,52 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AES Research</title>
-  <meta name="description" content="*AI R&D for long-horizon agentic systems.*">
+  <meta name="description" content="">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:,">
 </head>
 <body>
+<div class="page">
 <main>
-<h1>AES Research</h1>
-<p><strong>AI R&amp;D for long-horizon agentic systems.</strong></p>
-<p>I build the architectural patterns that let multi-agent systems survive real production work — not demo runs, not controlled benchmarks, but the kind of long-horizon autonomous operation where context compounds, memory matters, and every autonomous output has to be verifiable before it goes anywhere.</p>
+<h1 id="aes-research">AES Research</h1>
+<p class="subtitle">AI R&amp;D for long-horizon agentic systems</p>
+
+<p class="lede">I build the architectural patterns that let multi-agent systems survive real production work — not demo runs, not controlled benchmarks, but the kind of long-horizon autonomous operation where context compounds, memory matters, and every autonomous output has to be verifiable before it goes anywhere.</p>
+
+<p class="byline">Daniel Higuera · Houston · running AES Research as an independent R&amp;D program since 2017, in parallel with industrial R&amp;D leadership.</p>
+
 <hr>
-<h2>What I work on</h2>
+<h2 id="read-this-first">Read this first</h2>
+<div class="featured-essay">
+  <p><strong><a href="writing/distance-yes-and-no.html">Calibration, boundary layers, and the distance between yes and no: a practitioner's geometry of LLM reliability</a></strong></p>
+  <p>The geometric framing that ties context decay, retrieval failure, memory architecture, and agent calibration into one system. The thesis the rest of the essays build on.</p>
+</div>
+
+<h2 id="more-writing">More writing</h2>
 <ul>
-<li><strong>Two-tier memory architectures</strong> that persist across 40+ agent sessions without context bloat</li>
-<li><strong>Cross-project director agents</strong> coordinating sub-agent swarms via role-tagged addressing and role-boundary self-monitoring</li>
-<li><strong>UAT harnesses</strong> that surface the residual context gap — the failure modes synthetic benchmarks miss</li>
-<li><strong>Skeptic membranes</strong> that enforce verifiable outputs and retained human authority on autonomous agent work</li>
-<li><strong>Production ML pipelines</strong> with factor capture, ensemble clustering, and multi-year out-of-sample validation</li>
-</ul>
-<h2>Writing</h2>
-<ul>
-<li><strong><a href="writing/distance-yes-and-no.html">Calibration, boundary layers, and the distance between yes and no: a practitioner&rsquo;s geometry of LLM reliability</a></strong> — the geometric framing that ties context decay, retrieval failure, memory architecture, and agent calibration into one system</li>
 <li><strong><a href="writing/6-tier-maturity.html">The 6-tier agent maturity model: why most enterprise AI is failing on a calibration mismatch, not a tooling gap</a></strong> — a practitioner&rsquo;s tier ladder for self-locating an AI initiative, with the diagnostic that names the canonical enterprise failure in three questions</li>
 <li><strong><a href="writing/two-tier-memory.html">Two-tier memory for production agents: what chat systems don&rsquo;t tell you</a></strong> — a working architecture for agents that need to remember across sessions without choking on their own context</li>
 <li><strong><a href="writing/context-window-battery.html">The context window is a battery: surviving compaction on long-running agents</a></strong> — what happens to your calibration when the context fills up, why compaction drops the work you need most, and the discipline that protects you from it</li>
 <li><strong><a href="writing/attention-management.html">Attention management: routing between native LLM capability and augmented skills and tools</a></strong> — the control plane that decides, at every step, where the work should happen</li>
 </ul>
-<p>More deep-dives in progress.</p>
-<h2>Skills</h2>
-<p>Four reusable Claude Code skills that encode the patterns above as loadable instructions. Authored to be used directly (by a Claude Code session that has this repo cloned) and read independently as documentation of the decision rules each pattern formalizes.</p>
+<p><a href="writing/index.html">All writing &rarr;</a></p>
+<h2 id="skills">Skills</h2>
+<p>Four reusable Claude Code skills that encode the patterns from the writing as loadable instructions — the skeptic membrane, two-tier memory loader, attention router, and pattern-map identifier. Authored for direct use by a Claude Code session with this repo cloned.</p>
+<p><a href="skills.html">Browse all skills &rarr;</a></p>
+<h2 id="try-it">Try it</h2>
 <ul>
-<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-skeptic-membrane/SKILL.md"><code>aes-skeptic-membrane</code></a></strong> — vet an autonomous agent output before it crosses the boundary</li>
-<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-two-tier-memory/SKILL.md"><code>aes-two-tier-memory</code></a></strong> — scan an index + topic files and decide which entries to load</li>
-<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-attention-routing/SKILL.md"><code>aes-attention-routing</code></a></strong> — route a step between native / tool / skill / sub-agent</li>
-<li><strong><a href="https://github.com/Fortune0001/aesresearch-site/blob/main/.claude/skills/aes-pattern-map/SKILL.md"><code>aes-pattern-map</code></a></strong> — identify which patterns compose for an architecture question</li>
+<li><strong><a href="ask.html">Ask the Q&amp;A agent &rarr;</a></strong> — answers grounded in the published essays, with citations.</li>
+<li><strong><a href="demo/">Live architecture demo &rarr;</a></strong> — watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Worker source open at <a href="worker/">/worker/</a>.</li>
 </ul>
-<h2>Live demo</h2>
-<p><strong><a href="demo/">Try the live architecture demo &rarr;</a></strong> Type a question and watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Backed by a Cloudflare Worker that keeps the API keys server-side and enforces the demo prompt; the worker source is open at <a href="worker/">/worker/</a>.</p>
 <hr>
-<h2>About</h2>
-<p>AES Research is the independent R&amp;D program of <strong>Daniel Higuera</strong>, run since 2017 in parallel with industrial R&amp;D leadership at Hitachi Energy (grid-planning and wholesale-market software for North American ISOs and utilities). The work spans 12+ AI-native projects under a unified agentic architecture.</p>
-<p>Twenty years of professional experience across energy markets, production ML, and industrial software. AI and ML expertise developed independently over 15+ years, predating formal academic curricula for most modern sub-disciplines.</p>
-<p><a href="https://www.linkedin.com/in/daniel-higuera-09053925">LinkedIn</a> · Résumé available on request · Contact via LinkedIn or email</p>
-<footer>
-<p>AES Research · Houston, TX · 2026</p>
-</footer>
+<h2 id="about">About</h2>
+<p>AES Research is the independent R&amp;D program of <strong>Daniel Higuera</strong>, run since 2017 alongside industrial R&amp;D leadership. Twenty years of professional experience across energy markets, production ML, and industrial software. The current body of work spans 12+ AI-native projects under a unified director-agent architecture.</p>
+<p><a href="about.html">More about AES Research →</a></p>
+<p><a href="https://www.linkedin.com/in/daniel-higuera-09053925">LinkedIn</a> · <a href="contact.html">Contact</a></p>
 </main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
 </body>
 </html>
