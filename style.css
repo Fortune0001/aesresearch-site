@@ -337,7 +337,7 @@ footer p:last-child {
   resize: vertical;
 }
 
-.contact-form .honeypot {
+.honeypot {
   position: absolute;
   left: -10000px;
   width: 1px;
