@@ -34,7 +34,8 @@ const API_VERSION = '2023-06-01';
 const BETA_HEADER = 'experimental-cc-routine-2026-04-01';
 
 // /ask uses Haiku for cheap, sub-second responses grounded in the published corpus.
-const ASK_MODEL = 'claude-haiku-4-5';
+// Use the version-pinned ID; the bare alias 'claude-haiku-4-5' may not resolve.
+const ASK_MODEL = 'claude-haiku-4-5-20251001';
 const ASK_MAX_TOKENS = 1024;
 
 // ---------------------------------------------------------------------------
@@ -730,28 +731,44 @@ async function handleAsk(request, env, origin, ip) {
   // XML-wrap user input for prompt-injection defense
   const wrappedMessage = `<user_question>${message}</user_question>`;
 
-  // Citations API: corpus documents go as content blocks on the FIRST user message,
-  // followed by the user's question as a text block.  History turns (if any) come after.
-  // Per https://docs.anthropic.com/en/docs/build-with-claude/citations the shape is:
-  //   messages[0].content = [ ...document blocks, { type: 'text', text: question } ]
-  //   messages[1..] = prior history turns (plain string content is fine for those)
-  const firstUserContent = [
-    ...ASK_CORPUS_DOCUMENTS,
-    { type: 'text', text: wrappedMessage },
-  ];
-
-  const messages = [
-    { role: 'user', content: firstUserContent },
-    ...history.map(t => ({ role: t.role, content: t.content })),
-  ];
+  // Citations API: corpus documents go on the FIRST user message in the conversation,
+  // along with that turn's question text. Subsequent turns are plain text. The roles
+  // must alternate (user, assistant, user, ...). Cache write happens once on the
+  // first call; later calls hit the cache via prompt caching.
+  let messages;
+  if (history.length === 0) {
+    // First-ever turn: stuff documents + current question
+    messages = [
+      { role: 'user', content: [...ASK_CORPUS_DOCUMENTS, { type: 'text', text: wrappedMessage }] },
+    ];
+  } else {
+    // Stitch history → current question. Documents prepended to the first user
+    // turn in history (ensures the same prefix is sent → cache hit on every call).
+    const out = [];
+    let docsAttached = false;
+    for (const t of history) {
+      if (t.role === 'user' && !docsAttached) {
+        out.push({ role: 'user', content: [...ASK_CORPUS_DOCUMENTS, { type: 'text', text: t.content }] });
+        docsAttached = true;
+      } else {
+        out.push({ role: t.role, content: t.content });
+      }
+    }
+    // If history started with assistant (shouldn't, but defensive), prepend a user with docs only
+    if (!docsAttached) {
+      out.unshift({ role: 'user', content: [...ASK_CORPUS_DOCUMENTS, { type: 'text', text: '' }] });
+    }
+    // Current question always last
+    out.push({ role: 'user', content: wrappedMessage });
+    messages = out;
+  }
 
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': env.ANTHROPIC_API_KEY,
       'anthropic-version': API_VERSION,
-      // Citations API beta — corpus documents are passed as document blocks above.
-      'anthropic-beta': 'citations-2025-01-15',
+      // Citations is GA — no beta header needed; per-document `citations.enabled` opts in.
       'content-type': 'application/json',
     },
     body: JSON.stringify({
@@ -765,7 +782,7 @@ async function handleAsk(request, env, origin, ip) {
 
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => '');
-    console.error(`/ask anthropic upstream ${upstream.status}: ${errText.slice(0, 500)}`);
+    console.error(`/ask anthropic upstream ${upstream.status}: ${errText.slice(0, 800)}`);
     return new Response(JSON.stringify({ error: `upstream error (${upstream.status})` }), {
       status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
     });

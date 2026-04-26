@@ -111,11 +111,15 @@ async function readHeaders(message) {
 
 function buildReply(originalHeaders, originalMessageId, fromAddr, template) {
   const today = new Date().toUTCString();
+  // Generate a unique Message-ID for the reply. Cloudflare's send_email path
+  // requires this header — without it the reply throws "no message-id set".
+  const replyId = `<reply.${Date.now()}.${Math.random().toString(36).slice(2, 10)}@aesresearch.ai>`;
   const headers = [
     `From: contact@aesresearch.ai`,
     `To: ${fromAddr}`,
     `Subject: Re: ${(/^Subject:\s*(.+)$/im.exec(originalHeaders)?.[1] || '(your message)').replace(/[\r\n]/g, ' ').slice(0, 200)}`,
     `Date: ${today}`,
+    `Message-ID: ${replyId}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=utf-8`,
     `Auto-Submitted: auto-replied`,
@@ -190,13 +194,14 @@ export default {
         nextCount = count + 1;
       }
 
-      // Per-sender 7-day rate limit — keyed on envelope sender (envelope is the
-      // routable identity; header can be spoofed without affecting deliverability).
+      // Per-sender 7-day rate limit — keyed on envelope sender. Check first; defer
+      // the WRITE until after the reply succeeds (otherwise a failed send locks
+      // the sender out for 7 days without ever receiving an acknowledgement).
+      let senderKey = null;
       if (env.AUTO_ACK_KV) {
-        const senderKey = `ack:sender:${replyTo.toLowerCase()}`;
+        senderKey = `ack:sender:${replyTo.toLowerCase()}`;
         const last = await env.AUTO_ACK_KV.get(senderKey);
         if (last) return;
-        await env.AUTO_ACK_KV.put(senderKey, '1', { expirationTtl: 7 * 24 * 3600 });
       }
 
       // Build + send the reply. Increment global counter only after a successful
@@ -211,11 +216,14 @@ export default {
         const { EmailMessage } = await import('cloudflare:email');
         const reply = new EmailMessage('contact@aesresearch.ai', replyTo, rawToStream(replyRaw));
         await message.reply(reply);
+        // Reply succeeded — commit the per-sender lock and increment global counter.
+        if (senderKey && env.AUTO_ACK_KV) {
+          await env.AUTO_ACK_KV.put(senderKey, '1', { expirationTtl: 7 * 24 * 3600 });
+        }
         if (globalKey && env.AUTO_ACK_KV) {
           await env.AUTO_ACK_KV.put(globalKey, String(nextCount), { expirationTtl: 48 * 3600 });
         }
-        // Forward the ORIGINAL message to Daniel's gmail so it archives. Without
-        // this, the Worker consumes the mail and only the auto-reply persists.
+        // Forward the ORIGINAL message to Daniel's gmail so it archives.
         try {
           await message.forward('dhiguera1980@gmail.com');
         } catch (fwdErr) {
