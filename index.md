@@ -17,6 +17,7 @@ I build the architectural patterns that let multi-agent systems survive real pro
 ## Writing
 
 - **[Calibration, boundary layers, and the distance between yes and no: a practitioner's geometry of LLM reliability](writing/distance-yes-and-no.html)** — the geometric framing that ties context decay, retrieval failure, memory architecture, and agent calibration into one system
+- **[The 6-tier agent maturity model: why most enterprise AI is failing on a calibration mismatch, not a tooling gap](writing/6-tier-maturity.html)** — a practitioner's tier ladder for self-locating an AI initiative, with the diagnostic that names the canonical enterprise failure in three questions
 - **[Two-tier memory for production agents: what chat systems don't tell you](writing/two-tier-memory.html)** — a working architecture for agents that need to remember across sessions without choking on their own context
 - **[The context window is a battery: surviving compaction on long-running agents](writing/context-window-battery.html)** — what happens to your calibration when the context fills up, why compaction drops the work you need most, and the discipline that protects you from it
 - **[Attention management: routing between native LLM capability and augmented skills and tools](writing/attention-management.html)** — the control plane that decides, at every step, where the work should happen

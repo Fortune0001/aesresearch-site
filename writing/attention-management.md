@@ -6,13 +6,13 @@
 
 ## The routing problem
 
-An agent with memory, orchestration, and tool access still needs to decide, at every step, *where* the work should happen. The LLM can do some things natively. Some things are better handed to a skill — a bundled instruction set with its own loaded context. Some things need a tool — an external call that returns data or performs an action the model can't produce natively. Most non-trivial work is a sequence of these routing decisions stacked on top of each other.
+An agent with memory, orchestration, and tool access still needs to decide, at every step, *where* the work should happen. The LLM can do some things natively. Some things are better handed to a skill — a bundled instruction set with its own loaded context. Some things need a tool — an external call that returns data or performs an action the model can't produce natively. Most real work is a sequence of these routing decisions stacked on top of each other.
 
 Without explicit attention management, a system picks one default and lives with the consequences:
 
-- **Always native.** The LLM solves everything in-thread. Works until a problem lands that native capability can't actually solve — a computation that silently hallucinates, a data lookup that returns confabulated values, a multi-step reasoning chain that drifts off the rails with no verification layer. By the time the failure is visible, the output has already moved downstream.
-- **Always tool.** Every step goes through an external call. Reliable for the things tools do well, brittle and slow for the things the LLM could have handled natively and cheaply. Latency piles up. Costs pile up. The agent becomes dependent on tool availability for trivial work.
-- **Manual routing.** The user or the prompt dictates which path to take. Works for a known problem domain, doesn't scale to unknown ones, and puts the routing burden back on humans — which was most of what the agent was supposed to solve.
+- Always native. The LLM solves everything in-thread. Works until a problem lands that native capability can't actually solve — a computation that silently hallucinates, a data lookup that returns confabulated values, a multi-step reasoning chain that drifts off the rails with no verification layer. By the time the failure is visible, the output has already moved downstream.
+- Always tool. Every step goes through an external call. Reliable for the things tools do well, brittle and slow for the things the LLM could have handled natively and cheaply. Latency piles up. Costs pile up. The agent becomes dependent on tool availability for trivial work.
+- Manual routing. The user or the prompt dictates which path to take. Works for a known problem domain, doesn't scale to unknown ones, and puts the routing burden back on humans — which was most of what the agent was supposed to solve.
 
 Attention management is the explicit, architected layer that makes these choices so the system doesn't have to default into one of the three failure modes.
 
@@ -20,11 +20,11 @@ Attention management is the explicit, architected layer that makes these choices
 
 An LLM is a Markov chain over tokens. Each output token is a conditional distribution over the prefix, and the prefix is bounded by the context window. That framing is reductive, but it is accurate about where the hard limits live: bounded state, no persistent side-channel memory, no computation outside the token-prediction loop, no feedback between outputs and the underlying weights. Everything an LLM does that looks like reasoning, memory, or tool-use is reasoning-*about*-tokens, memory-*written-into*-tokens, tool-use-*represented-as*-tokens.
 
-External tools, skills, and structured memory are not replacements for that chain — they are augments to it. A vector-retrieval tool extends the effective context beyond the window. A computation tool gives the chain access to operations it cannot produce natively. A skeptic-membrane pass routes the chain's output through a secondary verification the chain itself cannot perform while generating. A two-tier memory structure lets the chain carry load-bearing facts across sessions without exceeding its bounded state.
+External tools, skills, and structured memory are not replacements for that chain — they are augments to it. A vector-retrieval tool extends the effective context beyond the window. A computation tool gives the chain access to operations it cannot produce natively. A skeptic-membrane pass routes the chain's output through a secondary verification the chain itself cannot perform while generating. A two-tier memory structure lets the chain carry the facts it needs across sessions without exceeding its bounded state.
 
 Attention management is what decides, in real time, when to invoke these augments. The value of explicit attention management, then, is not that it makes the LLM smarter. It is that it lets the architecture stretch the Markov chain's practical reach without pretending the limits aren't there.
 
-Put it in human terms. Attention management is the difference between a student trying to memorize an entire textbook and a student who takes notes before the test. The notes aren't a replacement for understanding — they're an augment that lets the student hold more than fits in working memory. **The pen and paper *is* the attention mechanism.** The student with notes can point to the right section, cite the right example, and spend their working memory on the reasoning instead of the recall. The student trying to keep everything in their head runs out of capacity on the first hard question.
+Put it in human terms. Attention management is the difference between a student trying to memorize an entire textbook and a student who takes notes before the test. The notes aren't a replacement for understanding — they're an augment that lets the student hold more than fits in working memory. The pen and paper is the attention mechanism. The student with notes can point to the right section, cite the right example, and spend their working memory on the reasoning instead of the recall. The student trying to keep everything in their head runs out of capacity on the first hard question.
 
 A Markov-chain LLM is the student without notes. External tools and structured memory are the notes. Attention management is the skill of knowing when to glance at the page and when to reason from what's already in working memory. Agents that try to "remember everything" fail the same way students do — not for lack of intelligence, but for lack of capacity. Agents that use external tools well work the same way prepared students do: they offload what they can, so they can think about what matters.
 
@@ -38,9 +38,9 @@ Attention management is how the architecture exercises that choice.
 
 It is a policy layer that sits above the primitives (memory, orchestration, reasoning, output) and decides, per step, which capability tier handles the work. That decision is informed by three things:
 
-1. **What the step actually demands.** A lookup against a small, known catalog is different from a retrieval against a million-row corpus. A one-off reasoning task is different from one that has to be verifiable. A tentative draft is different from a final artifact.
-2. **What native capability is available at the model tier currently in use.** Models shift over time. A step that needed a tool last year may be native this year. The policy has to be model-aware without being model-specific.
-3. **What the step costs and what it risks.** Tools cost latency and often money. Skills cost context budget. Native reasoning costs nothing extra but carries the highest hallucination risk on problems the model isn't reliable on. The routing choice is a cost/latency/reliability trade-off every time.
+1. What the step actually demands. A lookup against a small, known catalog is different from a retrieval against a million-row corpus. A one-off reasoning task is different from one that has to be verifiable. A tentative draft is different from a final artifact.
+2. What native capability is available at the model tier currently in use. Models shift over time. A step that needed a tool last year may be native this year. The policy has to be model-aware without being model-specific.
+3. What the step costs and what it risks. Tools cost latency and often money. Skills cost context budget. Native reasoning costs nothing extra but carries the highest hallucination risk on problems the model isn't reliable on. The routing choice is a cost/latency/reliability trade-off every time.
 
 It is *not* a hard-coded decision table. It is a small policy that encodes "under these conditions, prefer X." The specific heuristics matter less than the fact that routing decisions are made explicitly, recorded, and revisitable.
 
@@ -85,8 +85,6 @@ Attention management is the control plane for a production agent system. Memory 
 Most agent work today routes implicitly — whatever the prompt suggested, whatever the framework defaulted to. That produces fragile systems because the routing decisions are happening but they're invisible, unrevisitable, and unmodifiable. Making attention explicit is what turns a collection of patterns into a system that survives real use.
 
 It is also what lets the system evolve. Capability shifts; tools change; skills get added; new primitives enter the architecture. If attention management is an explicit layer, any of those changes is a small edit. If it isn't, every change touches every pattern.
-
-The patterns in this series — two-tier memory, cross-project director agents, skeptic membranes, UAT harnesses — are primitives. Attention management is what makes them a working whole.
 
 ---
 

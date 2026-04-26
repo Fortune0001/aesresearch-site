@@ -68,7 +68,7 @@ This isn't about being curt with the sub-agent. It's about context window surviv
 
 Once you've taken the pre-post compaction test and identified the damage, recovery is mechanical. You have your memory files. The agent reads its own saved calibration, its own saved procedures, and it reconstructs the understanding that got compacted out. RAG, but pointed at your own persistent memory rather than an external corpus.
 
-This is why atomic writes are load-bearing. If the memory files are corrupt or incomplete, there's nothing to RAG back into. The whole recovery chain depends on having clean, complete memory files on disk. That's the safety net — and it only works if the discipline was in place *before* you needed it.
+This is why atomic writes are the safety net that has to hold. If the memory files are corrupt or incomplete, there's nothing to RAG back into. The whole recovery chain depends on having clean, complete memory files on disk. That's the safety net — and it only works if the discipline was in place *before* you needed it.
 
 The ordering matters. You don't build the safety net during the fall.
 

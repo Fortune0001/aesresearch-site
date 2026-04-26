@@ -8,7 +8,7 @@
 
 In early 2026, an agent consuming a batch of emails ran into a prompt injection — a few sentences buried in the body of an email. The agent read the email, summarized it, passed the summary to a subagent for evaluation, and the subagent followed the instructions inside the summary: go pull sensitive content from the rest of the inbox and surface it back. The injection had become a prompt by being read.
 
-This is the same class of attack as SQL injection, just one layer up. Instead of strings becoming database queries, content is becoming prompts. It shows up everywhere agents touch external material — the GitHub README attack where injection in a README initiated a bash process and granted file access to a Cline-class IDE agent; the issue-triage variant where a customer-facing form silently feeds a downstream bot; the chatbot-binding-contract case where someone prompt-engineered a car dealership's bot into committing to sell a car for nothing and took the dealership to court over whether the bot could form a contract. The categories differ; the shape doesn't. **An agent with tools and external content has no defense against the content carrying instructions unless that defense is architectural.**
+This is the same class of attack as SQL injection, just one layer up. Instead of strings becoming database queries, content is becoming prompts. It shows up everywhere agents touch external material — a 2026 issue-triage prompt-injection that escalated into a supply-chain compromise on a popular agentic IDE, where an issue title was interpolated into the agent's prompt without sanitization and rode the workflow's permissions out into the release pipeline; the customer-facing-form variant where a public form silently feeds a downstream bot; the chatbot-binding-contract case where someone prompt-engineered a car dealership's bot into committing to sell a car for nothing and took the dealership to court over whether the bot could form a contract. The categories differ; the shape doesn't. **An agent with tools and external content has no defense against the content carrying instructions unless that defense is architectural.**
 
 A naive single-agent loop has nothing in its way. The model has been trained to be helpful, and it cannot tell the difference between a prompt I authored and a prompt that arrived inside the data I asked it to read. Prompts and content live in the same address space the moment the model sees them. The only defense is a separation that happens *before* the model sees the content as a prompt — and that separation is a structure of named roles, not a single chokepoint.
 
@@ -19,6 +19,8 @@ This piece walks the five roles I use, in the order they engage. **Membrane, Tra
 ## Role one: the Membrane
 
 The Membrane has one question. *Does this pass as a prompt?*
+
+*— the moment you realize the email body's instructions are being treated as if you sent them yourself, and you can't unmix the two without rebuilding the entire pipeline.*
 
 That's it. Not a content filter. Not a quality gate. It is asking whether the thing in front of it should be allowed to enter the prompt layer of the next agent. Prompt injection — by definition — should not.
 
@@ -33,6 +35,8 @@ If your pipeline ever passes raw external content directly into a downstream age
 ## Role two: the Traffic Cop
 
 A Membrane catches injection attempts. It does not decide where the legitimate work goes next. The Traffic Cop does.
+
+*— a small fast model that interrupts a long-running agent because the work has drifted into a domain the long-running agent isn't certified for.*
 
 The Traffic Cop is the agent that knows what every other agent in the pipeline does and doesn't do. It looks at a piece of work that has cleared the Membrane and asks two questions. *Does this make sense? Where does it go from here?*
 
@@ -50,6 +54,8 @@ The Traffic Cop is not deeply intelligent and does not need to be. It needs to k
 
 The Director is what the Traffic Cop escalates to.
 
+*— the architecture decision that the work plan was wrong from the start, made before the eight hours of computation that was about to follow it.*
+
 A Traffic Cop is good at routing work that fits the pipeline and bad at deciding what to do with work that doesn't fit. That is a different kind of decision — not "where does this go next" but "should this happen at all, and under what conditions."
 
 I learned the hard way that a Director is needed. The Traffic Cop was the first orchestration agent I wrote, and for a long time I thought it was enough. It wasn't. The Traffic Cop kept making the right call inside the pipeline and the wrong call at the edges — dispatching novel work into agents that weren't equipped for it (because dispatching is what Traffic Cops do) and refusing to escalate (because escalation wasn't in its role definition). The thing missing wasn't more intelligence. It was a *higher level* in the orchestration hierarchy that owned the question of when the pipeline itself was the wrong shape for the work.
@@ -66,11 +72,13 @@ The first three roles are kill-switches and routers. They block, dispatch, escal
 
 The Nudge is qualitative oversight. An agent whose only job is to ask, periodically, *does this still make sense?*
 
+*— a soft signal that the agent is going around in circles even though no individual step is failing.*
+
 The Nudge is what would have stopped the $47K agent loop — eleven days, $47,000 in API charges, nothing produced. Two agents calling each other, semantic loop, no observer asking whether the loop should still be running. None of the previous three roles are designed for the question "is this whole thing still a good idea." The Membrane is binary. The Traffic Cop is stage-local. The Director is episodic. None of them watch the long arc of the work.
 
 The Nudge does. It runs alongside the pipeline, samples the state, and asks the soft question. It has no authority to kill. It surfaces a signal. If the signal is loud enough, the Director catches it on the next pass and decides whether to act. If the signal is faint, it accumulates — three Nudges in a row asking whether the loop should still be running is a louder Nudge.
 
-This soft-signal property is the point. **A hard kill-switch is too sharp for this kind of qualitative drift.** A loop that's been running too long is not always wrong — sometimes the work is genuinely large. A research swarm pulling sources for an hour might be the right behavior. A hard rule like "kill any process running over $X" fires on legitimate work and gets disabled by frustrated operators inside a week. The Nudge avoids that failure mode by being a signal, not a switch. It tells the Director something is worth looking at. The Director decides what to do.
+This soft-signal property is the point. A hard kill-switch is too sharp for this kind of qualitative drift. A loop that's been running too long is not always wrong — sometimes the work is genuinely large. A research swarm pulling sources for an hour might be the right behavior. A hard rule like "kill any process running over $X" fires on legitimate work and gets disabled by frustrated operators inside a week. The Nudge avoids that failure mode by being a signal, not a switch. It tells the Director something is worth looking at. The Director decides what to do.
 
 The Nudge is a check engine light, not a kill cord. Use the wrong one and you either get fires that nobody noticed, or a system that nobody can keep running.
 
@@ -80,13 +88,15 @@ The Nudge is a check engine light, not a kill cord. Use the wrong one and you ei
 
 The Phase Gate is the only one of the five roles that is temporal rather than spatial.
 
+*— the model upgraded last week and the interrupts you suppressed for being noise are now the only signal you have that something has changed.*
+
 The other four roles all live at boundaries in the pipeline — Membrane between external and internal, Traffic Cop between stages, Director above the Traffic Cop, Nudge across the long arc. The Phase Gate sits in time. It fires when *the kind of work* changes — research into modeling, back-end into front-end, one model family into another. Phase changes warrant recalibration. Phase Gates are the structural recognition that recalibration is owed.
 
 The obvious Phase Gates are easy. Back-end to front-end. Research to modeling. Modeling to deployment. The agents calibrated for the previous phase are now operating on the next, and their calibration may not transfer. A Phase Gate at each boundary is a checkpoint: pause, surface the deliverable, ask whether the result is what we expected, recalibrate for the next phase.
 
-The non-obvious Phase Gates are the ones that get missed. **A model upgrade is a Phase Gate.** Going from Opus 4.6 to Opus 4.7 is a Phase Gate, even though the work hasn't changed. The geometry has. The boundary layers the old model knew how to navigate have shifted under the new model in ways that aren't visible from the outside. An interrupt that fires when calibration is owed will fire more often after a model upgrade — exactly what you want. The system is telling you, by interrupting, that the math underneath has moved. The wrong response is to suppress the interrupts. The right response is to take them seriously, recalibrate, and watch the frequency drop back down as the new boundaries settle. Environment changes are Phase Gates too. Dev to prod. Sandbox account to real account. Small dataset to large. The work is "the same." The geometry isn't.
+The non-obvious Phase Gates are the ones that get missed. **A model upgrade is a Phase Gate.** Going from Opus 4.6 to Opus 4.7 is a Phase Gate, even though the work hasn't changed. The geometry has. The boundary layers the old model handled have shifted under the new model in ways that aren't visible from the outside. An interrupt that fires when calibration is owed will fire more often after a model upgrade — exactly what you want. The system is telling you, by interrupting, that the math underneath has moved. The wrong response is to suppress the interrupts. The right response is to take them seriously, recalibrate, and watch the frequency drop back down as the new boundaries settle. Environment changes are Phase Gates too. Dev to prod. Sandbox account to real account. Small dataset to large. The work is "the same." The geometry isn't.
 
-Phase Gates compose with the Director, which sets them and decides which require a human in the loop. Early in a project, every Phase Gate is human-gated by default. Later, after the agent has been through enough phase changes that it has internalized the calibration, the gates that were once human stops become automated checkpoints. I have run sequences where the first sixteen iterations needed input and the next twenty ran on full autopilot — the gates still firing, but the agent answering them itself, because it had learned the boundary. **The point of a Phase Gate is not that a human always has to be there. It's that the boundary is named, the recalibration is explicit, and someone — the human or the calibrated agent — is making the decision that the work has crossed into new territory.**
+Phase Gates compose with the Director, which sets them and decides which require a human in the loop. Early in a project, every Phase Gate is human-gated by default. Later, after the agent has been through enough phase changes that it has internalized the calibration, the gates that were once human stops become automated checkpoints. I have run sequences where the first sixteen iterations needed input and the next twenty ran on full autopilot — the gates still firing, but the agent answering them itself, because it had learned the boundary. The point of a Phase Gate is not that a human always has to be there. It's that the boundary is named, the recalibration is explicit, and someone — the human or the calibrated agent — is making the decision that the work has crossed into new territory.
 
 ---
 
@@ -102,19 +112,21 @@ This is defense in depth in the agent-orchestration domain. A firewall plus an I
 
 ---
 
-## Why this is what makes calibration load-bearing
+## Why calibration without this stack is theater
 
 Without this stack, the calibration discipline I've written about elsewhere is theater.
 
-The flagship piece on calibration, boundary layers, and the distance between yes and no makes the geometric argument: the model is never picking yes or no, it's picking a position on the line between them, and reliability is about how far apart those endpoints are at the moment of the decision. Boundary layers are the artifact of that calibration. But calibrated boundary layers require *something to do the recalibration when the geometry shifts*. **The five-role stack is what does it.** The Director notices the boundary has moved. The Phase Gate fires when calibration is owed. The Nudge surfaces the long-arc signal that things have been getting weirder for a while. Without these roles, the boundaries get drawn once at deployment time and rot silently as the model upgrades, the environment shifts, the work moves into novel territory.
+The flagship piece on calibration, boundary layers, and the distance between yes and no makes the geometric argument: the model is never picking yes or no, it's picking a position on the line between them, and reliability is about how far apart those endpoints are at the moment of the decision. Boundary layers are the artifact of that calibration. But the calibration only holds if *something does the recalibration when the geometry shifts*. The five-role stack is what does it. The Director notices the boundary has moved. The Phase Gate fires when calibration is owed. The Nudge surfaces the long-arc signal that things have been getting weirder for a while. Without these roles, the boundaries get drawn once at deployment time and rot silently as the model upgrades, the environment shifts, the work moves into novel territory.
 
-The inversion: **human-in-the-loop is structural in a calibrated system, not a paranoia tax.**
+The inversion: human-in-the-loop is structural in a calibrated system, not a paranoia tax.
 
 A human-in-everything policy is paranoia. A pull-the-humans-out policy is recklessness. Both come from treating human-in-the-loop as a fixed-cadence policy decision instead of as a self-tuning property of the orchestration. The five-role stack defines a self-tuning HITL system: the interrupts come back exactly when the geometry shifts. Model upgrade, environment change, novel territory — interrupts come back. Routine work in a stable environment — interrupts taper toward zero, the human moves further out of the loop, and the system runs at full autopilot in the regime where full autopilot is correct. The human is in the loop because the geometry says so, and the geometry tells the system when to invite the human back in.
 
-The cost of running without the stack is paid in the absence, not the presence. Two to ten times the cost of the actual work — not in per-token pricing, but in wild goose chases, semantic loops the Nudge would have flagged, novel-territory work the Director should have escalated and didn't. The $47K loop is the load-bearing example because it made the news; the median failure is smaller and quieter, and pays out continuously. The Membrane stops a class of attack that would otherwise be free for an attacker to attempt. The Traffic Cop stops dispatch into the wrong agent. The Director stops the pipeline from running on autopilot through territory it isn't calibrated for. The Nudge stops the eleven-day loop. The Phase Gate stops the silent recalibration debt that accumulates every time the model upgrades. These are not features. They are the cost of running agentic work safely at all.
+The cost of running without the stack is paid in the absence, not the presence. Two to ten times the cost of the actual work — not in per-token pricing, but in wild goose chases, semantic loops the Nudge would have flagged, novel-territory work the Director should have escalated and didn't. The $47K loop is the example that made the news; the median failure is smaller and quieter, and pays out continuously. The Membrane stops a class of attack that would otherwise be free for an attacker to attempt. The Traffic Cop stops dispatch into the wrong agent. The Director stops the pipeline from running on autopilot through territory it isn't calibrated for. The Nudge stops the eleven-day loop. The Phase Gate stops the silent recalibration debt that accumulates every time the model upgrades. These are not features. They are the cost of running agentic work safely at all.
 
 Build organically. Calibrate as you go. Trust the interrupts when they come back — they are the only honest signal the system has about its own boundaries. The apparent shortcuts — single chokepoints, fixed-cadence approval gates, content-classifier filters — are how the well-publicized failures keep happening.
+
+*For a detailed account of the issue-triage prompt-injection class, see Snyk's writeup [Clinejection](https://snyk.io/blog/cline-supply-chain-attack-prompt-injection-github-actions/) and Adnan Khan's original disclosure [Clinejection — Compromising Cline's Production Releases just by Prompting an Issue Triager](https://adnanthekhan.com/posts/clinejection/).*
 
 ---
 
