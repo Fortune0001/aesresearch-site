@@ -211,7 +211,9 @@ What the agent is not: it doesn't have access to the internet, your codebase, or
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || 'Request failed (' + resp.status + ')');
+        const httpErr = new Error(err.error || 'Request failed (' + resp.status + ')');
+        httpErr.status = resp.status;
+        throw httpErr;
       }
 
       // SSE reader
@@ -271,6 +273,9 @@ What the agent is not: it doesn't have access to the internet, your codebase, or
     } catch (e) {
       if (e.name === 'AbortError') {
         setStatus('Request timed out. Please try again.', true);
+      } else if ((e.status && e.status >= 500) || e.name === 'TypeError') {
+        // Backend down (5xx) or network failure — honest offline notice, not a raw error.
+        setStatus('The Q&A agent is temporarily offline while its backend is restored. The essays cover the core patterns in the meantime, and the contact page reaches Daniel directly.', true);
       } else {
         setStatus(e.message || 'Something went wrong. Please try again.', true);
       }
@@ -325,7 +330,9 @@ What the agent is not: it doesn't have access to the internet, your codebase, or
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || 'Request failed (' + resp.status + ')');
+        const httpErr = new Error(err.error || 'Request failed (' + resp.status + ')');
+        httpErr.status = resp.status;
+        throw httpErr;
       }
 
       const data = await resp.json().catch(() => ({}));
@@ -340,6 +347,8 @@ What the agent is not: it doesn't have access to the internet, your codebase, or
     } catch (e) {
       if (e.name === 'AbortError') {
         setStatus('Request timed out. Please try again.', true);
+      } else if ((e.status && e.status >= 500) || e.name === 'TypeError') {
+        setStatus('The research-agent dispatch is temporarily offline. The contact page is the reliable path in the meantime.', true);
       } else {
         setStatus(e.message || 'Something went wrong. Please try again.', true);
       }

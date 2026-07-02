@@ -21,6 +21,11 @@
 
   const API_BASE = 'https://api.aesresearch.ai'; // Worker on proxied subdomain
 
+  // Shown in the assistant bubble when the backend is unreachable or erroring,
+  // instead of a raw HTTP error. Self-clearing: successful calls never touch it.
+  const OFFLINE_NOTICE = 'The live demo backend is temporarily offline. The rest of the site is unaffected — and the "What you\'re seeing" section below walks through exactly what this demo shows when it\'s live. If you\'d like a walkthrough in the meantime, the contact page reaches Daniel directly.';
+  const RATE_LIMIT_NOTICE = 'You\'ve reached the per-visitor hourly limit — the demo is deliberately rate-limited. Please try again a little later.';
+
   // Per-session conversation history. In-memory only — refresh/close tab = fresh.
   // Sent with each /chat POST so the server stays stateless but the agent has context.
   const history = [];
@@ -91,7 +96,9 @@
 
       if (!res.ok || !res.body) {
         const errText = await res.text().catch(() => 'unknown');
-        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+        const httpErr = new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+        httpErr.status = res.status;
+        throw httpErr;
       }
 
       const reader = res.body.getReader();
@@ -134,8 +141,17 @@
         }
       }
     } catch (err) {
-      appendStreamError(err.message);
-      assistantBody.textContent += ` [failed: ${err.message}]`;
+      if ((err.status && err.status >= 500) || err.name === 'TypeError') {
+        // Backend down (5xx) or network failure — honest offline notice, not a raw error.
+        appendStreamError(err.status ? `backend unavailable (HTTP ${err.status})` : 'backend unreachable (network error)');
+        assistantBody.textContent = OFFLINE_NOTICE;
+      } else if (err.status === 429) {
+        appendStreamError('rate limit reached (HTTP 429)');
+        assistantBody.textContent = RATE_LIMIT_NOTICE;
+      } else {
+        appendStreamError(err.message);
+        assistantBody.textContent += ` [failed: ${err.message}]`;
+      }
     } finally {
       // Commit to history only if we got a usable assistant response.
       // Skip on hard failure (no text at all) so a retry uses a clean prefix.
@@ -164,7 +180,11 @@
         body: JSON.stringify({ text: userText }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      if (!res.ok) {
+        const httpErr = new Error(data.error || `HTTP ${res.status}`);
+        httpErr.status = res.status;
+        throw httpErr;
+      }
       const url = data.claude_code_session_url;
       if (url) {
         appendLayer('response', 'routine fired', `Session URL: ${url}`);
@@ -173,7 +193,11 @@
         appendStreamError('Routine fire returned no session URL.');
       }
     } catch (err) {
-      appendStreamError('Routine fire failed: ' + err.message);
+      if ((err.status && err.status >= 500) || err.name === 'TypeError') {
+        appendStreamError('Routine dispatch is temporarily offline. The contact page is the reliable path in the meantime.');
+      } else {
+        appendStreamError('Routine fire failed: ' + err.message);
+      }
     } finally {
       sendBtn.disabled = false;
       fireBtn.disabled = false;

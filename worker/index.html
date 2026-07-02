@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Worker source — AES Research</title>
+  <meta name="description" content="The Cloudflare Worker behind the interactive tools on this site — published source.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a></nav>
+<main>
+<h1 id="demo-worker-source">Demo Worker source</h1>
+<p><em>The Cloudflare Worker behind the interactive tools on this site — published source.</em></p>
+<hr>
+<p>The API at <code>api.aesresearch.ai</code> is a single Cloudflare Worker that fronts every interactive tool on this site: the <a href="../demo/">live architecture demo</a>, the <a href="../ask.html">Q&amp;A agent</a>, and the <a href="../contact.html">contact form</a>. It keeps API keys server-side, enforces per-IP rate limits and a shared daily spend ceiling before any upstream call, and re-emits model output as the structured SSE events the frontends render.</p>
+<h2 id="source-files">Source files</h2>
+<ul>
+<li><a href="worker.js">worker.js</a> — the Worker itself: routing, rate limiting, budget ceiling, SSE transforms, and the per-endpoint handlers</li>
+<li><a href="corpus.js">corpus.js</a> — the published-essay corpus the Q&amp;A agent cites from (generated from the same markdown sources as the site)</li>
+<li><a href="wrangler.toml">wrangler.toml</a> — deploy config: routes and KV bindings (secrets are set via <code>wrangler secret</code>, never stored here)</li>
+<li><a href="README.md">README.md</a> — deploy and operations notes</li>
+</ul>
+<h2 id="why-a-worker-in-front-of-the-model-api">Why a Worker in front of the model API</h2>
+<ol>
+<li><strong>Secret protection</strong> — the API keys stay server-side; nothing a client can exfiltrate.</li>
+<li><strong>Rate control</strong> — per-IP hourly limits plus a shared daily budget cap, enforced before any upstream spend.</li>
+<li><strong>Prompt control</strong> — the system prompt that drives the demo&rsquo;s layer protocol lives server-side, so visitors can&rsquo;t edit it out to bypass the demo structure.</li>
+<li><strong>Same-origin simplicity</strong> — one proxied subdomain for every endpoint keeps the frontends plain <code>fetch</code> calls.</li>
+</ol>
+</main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
+</body>
+</html>

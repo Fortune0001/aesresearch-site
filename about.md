@@ -4,7 +4,7 @@
 
 ---
 
-AES Research — Applied Emergent Sciences — is the independent AI research vehicle of Daniel Higuera. The work started in 2017 as a structured program for exploring production AI architecture outside the constraints of any employer's roadmap. It has run continuously since — through a full-time deep-focus sprint from 2020 to 2022, and alongside industrial R&D leadership at Hitachi Energy from 2022 to present.
+AES Research — Applied Emergent Sciences — is the independent AI research vehicle of Daniel Higuera. The work started in 2017 as a structured program for exploring production AI architecture outside the constraints of any employer's roadmap. It has run continuously since — through a full-time deep-focus sprint from 2020 to 2022, and alongside industrial R&D leadership at Hitachi Energy from 2022 to 2026.
 
 The focus is agentic systems: the architectural patterns that let multi-agent systems operate reliably over long horizons, across many sessions, in real production conditions. Not benchmark performance. Not demo quality. The problems that show up when context compounds, memory has to persist, autonomous outputs have to be verifiable, and the human can't be in the loop for every decision.
 
@@ -14,7 +14,7 @@ The current body of work spans 12+ AI-native projects under a unified director-a
 
 Twenty years of professional experience across energy markets, production ML, and industrial software. Eleven years of direct-report management.
 
-**R&D Manager, Hitachi Energy** (2022 – present). Owns PROMOD — the industry-standard grid-planning and wholesale-market simulation platform used by North American ISOs and utilities. Previously owned the Bid-to-Bill wholesale-settlement system before pivoting to current scope.
+**R&D Manager, Hitachi Energy** (2022 – 2026). Owned PROMOD — the industry-standard grid-planning and wholesale-market simulation platform used by North American ISOs and utilities. Previously owned the Bid-to-Bill wholesale-settlement system before pivoting to the PROMOD scope.
 
 **Data Platform Owner, Innowatts** (2019 – 2020). Managed a 10–15-person globally distributed engineering team across the US, India, Ireland, England, and Spain. Big-data ETL, SOC2 + ISO 27001 compliance, SaaS architecture, novel ML algorithms for utility-customer segmentation.
 
