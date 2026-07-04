@@ -288,8 +288,9 @@ def deploy() -> None:
         run("git", "init", "-b", "main")
         print("  git init")
     token = load_token()
-    remote_url = f"https://x-access-token:{token}@github.com/{REPO}.git"
-    # Configure / re-configure origin
+    # Plain remote URL — the token is passed per-invocation via an HTTP header
+    # at push time and is never persisted into .git/config (Review #22 F10).
+    remote_url = f"https://github.com/{REPO}.git"
     existing = run("git", "remote", check=False).stdout.split()
     if "origin" in existing:
         run("git", "remote", "set-url", "origin", remote_url)
@@ -321,7 +322,11 @@ def deploy() -> None:
         print("  committed")
     # Push — de-facto trunk is a session branch; local `main` is stale by design.
     # Pushing HEAD:main deploys the current checkout without touching local main.
-    run("git", "push", "origin", "HEAD:main")
+    # Auth via ephemeral header; nothing token-shaped touches disk.
+    import base64
+    auth = base64.b64encode(f"x-access-token:{token}".encode()).decode()
+    run("git", "-c", f"http.https://github.com/.extraheader=AUTHORIZATION: basic {auth}",
+        "push", "origin", "HEAD:main")
     print("  pushed")
 
 
