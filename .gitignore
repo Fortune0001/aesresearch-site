@@ -1,0 +1,10 @@
+# Local tool state — never publish
+__pycache__/
+.wrangler/
+*.pyc
+
+# Unpublished drafts and internal working files.
+# NOTE: gitignore only shields UNTRACKED files — drafts committed before this
+# file existed stay tracked. deploy()'s `git add -A` must never stage new
+# internal material from _drafts/; publishing a draft = move it to writing/.
+writing/_drafts/

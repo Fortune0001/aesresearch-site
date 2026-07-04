@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC) — AES Research</title>
+  <meta name="description" content="">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a> <span class="sep">/</span> <a href="index.html">Writing</a></nav>
+<main>
+<h1 id="context-unbounded-codebase-investigation-a-capability-proof-on-kubernetes-36m-loc">Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)</h1>
+<p class="article-meta">Published 2026-07-04 · 5 min read</p>
+<p><strong>Date:</strong> 2026-06-05 · <strong>Target:</strong> <code>kubernetes/kubernetes</code> @ master (<code>7a1385a3</code>; full SHA <code>7a1385a332e503ac051edc39a57e0d84fc5c4e98</code>) · <strong>Cost:</strong> $0 actual (ran within existing subscription capacity; ~$637 API-equivalent)</p>
+<h2 id="what-this-demonstrates">What this demonstrates</h2>
+<p>AES Research&rsquo;s investigation architecture — a hierarchical, multi-agent research system — investigated the <strong>entire Kubernetes codebase, 2,001 packages / 3.6M lines of Go, and produced a single coherent architecture-level synthesis, with no individual reasoning context ever exceeding a bounded working set.</strong> This is the empirical proof that automated codebase investigation scales to arbitrarily large systems: per-tier context stays <em>flat</em> as total scope grows.</p>
+<p>The target was deliberately <strong>non-AI</strong> — a distributed-systems codebase in Go — to show the architecture generalizes beyond the ML domain it was first exercised on (a prior run analyzed a 450-model ML library; this run is 4.4× the targets and a different language and domain).</p>
+<h2 id="the-run-all-figures-measured-not-estimated">The run (all figures measured, not estimated)</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Repo / commit</td>
+<td><code>kubernetes/kubernetes</code> @ master <code>7a1385a3</code></td>
+</tr>
+<tr>
+<td>Scale (measured)</td>
+<td><strong>3,598,801 Go LOC</strong> excl. vendor (2.88M hand-written); 12,764 files; 3,082 packages</td>
+</tr>
+<tr>
+<td>Targets investigated</td>
+<td><strong>2,001</strong> substantial core packages (≥100 LOC)</td>
+</tr>
+<tr>
+<td>Hierarchy</td>
+<td><strong>67 sub-investigations → 12 mid-coordinators → 1 master</strong> (3-level)</td>
+</tr>
+<tr>
+<td>Findings</td>
+<td><strong>6,329</strong> raw · <strong>494 confirmed</strong> hypotheses · 12 refuted · 0 left open</td>
+</tr>
+<tr>
+<td>Convergence</td>
+<td>all <strong>12</strong> mid-syntheses converged on the same architecture, <strong>zero dissent</strong></td>
+</tr>
+<tr>
+<td>Compute</td>
+<td>11 cadenced fires over ~2 days; no fire exceeded the ~74-min hardware cap</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td><strong>0 chunks lost</strong>; self-healing carried the run unattended across a provider quota-reset boundary</td>
+</tr>
+<tr>
+<td>Per-tier context</td>
+<td><strong>bounded at every tier</strong> — the master read 12 mid-syntheses, never 67 subs</td>
+</tr>
+<tr>
+<td>Cost</td>
+<td><strong>$0 actual</strong> (subscription capacity); ~$637 API-equivalent</td>
+</tr>
+</tbody>
+</table>
+<h2 id="headline-seven-convergent-meta-patterns">Headline: seven convergent meta-patterns</h2>
+<p>The master synthesis (12,056 characters, complete) surfaced seven cross-cluster patterns <strong>no single sub-investigation could see</strong> — each requires stitching findings across clusters:</p>
+<ol>
+<li><strong>Four-Stage Universal Pipeline — Define → Generate → Cache → Reconcile.</strong> Every API resource traverses the same four stages; the ~2,000 packages are combinatorial expansion (API groups × versions × generated layers), not 2,000 independent designs.</li>
+<li><strong>Fractal Reconciliation.</strong> The watch→enqueue→reconcile→requeue loop recurs at five scales (primitive, manager, controller, component, bootstrap) — understanding one controller is architecturally equivalent to understanding all.</li>
+<li><strong>Interface-Segregated Chain Composition.</strong> Narrow Go interfaces composed into ordered chains is the universal wiring idiom (auth, admission, storage, HTTP, volumes, streaming); Kubernetes replaces inheritance and plugin SDKs with one composition strategy.</li>
+<li><strong>Code Generation as Architectural Governance.</strong> ~8 generator templates — not the ~2,000 packages — are the &ldquo;real&rdquo; codebase; cross-group drift is structurally impossible because every group passes the same template pipeline.</li>
+<li><strong>Generic-Store + Strategy as the API Surface Atom.</strong> Every resource = <code>genericregistry.Store</code> + a type-specific <code>Strategy</code>; CRDs are projections of the same architecture, sharing identical persistence/admission/serialization/watch semantics with built-in resources.</li>
+<li><strong>Hub-and-Spoke API Versioning.</strong> Internal &ldquo;hub&rdquo; types + generated conversions decouple storage from wire format; API compatibility is an <em>emergent consequence of codegen + hub types</em>, not a code-review policy.</li>
+<li><strong>Phased Component Bootstrap with DI.</strong> Every binary boots through a phased, idempotent, dependency-ordered sequence that is itself reconciliation-shaped — closing the fractal loop.</li>
+</ol>
+<blockquote>
+<p><em>&ldquo;Kubernetes is a declarative, level-triggered reconciliation engine whose ~2,000-package codebase is not 2,000 independent designs but a single architectural cell — versioned types → generated clients → informer caches → reconcile loops — stamped out by code generators and composed through narrow Go interfaces.&rdquo;</em> — master synthesis, converged across all 12 mid-coordinators with zero dissent.</p>
+</blockquote>
+<p>The <strong>convergence is itself the result</strong>: 12 independent mid-syntheses, each over a different ~5–6-sub slice of the codebase, arrived at the same characterization. 12 refuted hypotheses out of 6,329 — all local edge cases, no inter-cluster contradictions.</p>
+<h2 id="why-it-scales-the-composition">Why it scales — the composition</h2>
+<p>The capability is built by composing four primitives, each bounding a different dimension:</p>
+<ul>
+<li><strong>Hierarchical synthesis bounds CONTEXT.</strong> In a two-level configuration, the master&rsquo;s brief grows with sub count — on the prior 450-target run it saturated at 15 subs. The third tier is the primitive that removes that growth: it caps every tier&rsquo;s fan-in — the master reads 12 mids, each mid reads ~6 subs, each sub investigates ~30 packages. No reasoning context grows with total scale; that flatness <em>is</em> the &ldquo;context-unbounded&rdquo; property. Scaling curve: <strong>450 targets / 15-sub master fan-in → 2,001 targets / 12-mid master fan-in</strong> — fan-in stayed bounded while targets grew 4.4×.</li>
+<li><strong>Parallel fan-out bounds WALL-CLOCK.</strong> Independent subs and independent mid-syntheses run concurrently inside a measured hardware-safe band, so total time tracks depth, not breadth.</li>
+<li><strong>Cadenced firing bounds HARDWARE STRESS.</strong> Work decomposes into bounded fires; no single fire exceeds the safety envelope.</li>
+<li><strong>Self-healing bounds RELIABILITY.</strong> Transient timeouts and budget caps pause-and-retry without losing work; the run finished unattended across a provider quota-reset boundary with zero chunks lost.</li>
+</ul>
+<p>Together: <em>investigate an arbitrarily large codebase, at bounded per-tier context, in bounded wall-clock, on bounded hardware, unattended.</em></p>
+<h2 id="fault-absorption-measured">Fault absorption, measured</h2>
+<p>Reliability was exercised, not assumed. Over the full run, agent-level transient failures — 10 timeouts and 5 budget-cap hits — were absorbed by the self-healing layer with <strong>0 chunks lost</strong>. Operating parameters were retuned mid-run (per-agent timeout 1200s→600s; per-coordinator synthesis budget capped at $1) without stopping the investigation, and the run completed unattended, including traversal of a provider quota-reset window.</p>
+<h2 id="coverage-frontier-the-next-targets">Coverage frontier — the next targets</h2>
+<p>The investigation maps its own coverage frontier as it runs. It flagged five areas as the natural next targets: (1) <code>kube-proxy</code> networking data-plane internals, (2) scheduler scoring/filtering plugin algorithms, (3) etcd client interaction patterns (watch multiplexing, leases, compaction), (4) testing / e2e infrastructure, (5) feature-gate propagation from flags through to runtime behavior.</p>
+<h2 id="provenance">Provenance</h2>
+<p>Every figure above is measured, not estimated: scale figures come from a direct count on the clone at the stated commit, and hierarchy, findings, convergence, reliability, and cost figures come from the run&rsquo;s own measurement records and per-fire usage logs. The target commit is publicly resolvable on GitHub, so the scale measurements are independently reproducible.</p>
+<div class="post-footer"><p class="prev-next"><a href="distance-yes-and-no.html">&larr; Previous</a> · <a href="membrane-traffic-cop-director.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
+</main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
+</body>
+</html>

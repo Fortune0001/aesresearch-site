@@ -245,6 +245,17 @@ def build() -> None:
     writing = SITE / "writing"
     if writing.exists():
         essays = sorted(writing.glob("*.md"))
+        # Stub guard: essay sources whose canonical content moved to the warehouse are
+        # 6-line "MOVED" stubs. Rendering one would overwrite (and on deploy, destroy)
+        # the live essay HTML. Fail closed: refuse to build until the source is restored.
+        stubbed = [p.name for p in essays
+                   if "# MOVED" in p.read_text(encoding="utf-8", errors="replace")[:400]]
+        if stubbed:
+            raise SystemExit(
+                "REFUSING TO BUILD: stub-swapped essay source(s) would clobber live HTML: "
+                + ", ".join(stubbed)
+                + "\nRestore full .md content (canonical copies: Research_Warehouse/articles/landing_site/) "
+                  "or remove the stub files before building.")
         for i, md_path in enumerate(essays):
             html_path = md_path.with_suffix(".html")
             prev_slug = essays[i-1].stem if i > 0 else None
@@ -289,20 +300,28 @@ def deploy() -> None:
     # actually routable via Cloudflare Email Routing. daniel@ has no MX route.
     run("git", "config", "user.email", "contact@aesresearch.ai")
     run("git", "config", "user.name", "Daniel Higuera")
-    # Stage + commit
-    run("git", "add", "-A")
+    # Stage + commit — explicit allowlist only (Review #22 F2). `git add -A`
+    # swept unrelated in-flight working-tree files into public deploys.
+    allow = [
+        ".gitignore", ".nojekyll", "CNAME",
+        "build.py", "build_corpus.py", "style.css", "layouts/default.html",
+        "index.md", "index.html", "about.md", "about.html",
+        "contact.md", "contact.html", "ask.md", "ask.html",
+        "skills.md", "skills.html", "writing-index.md",
+        "writing/index.html", "worker/corpus.js",
+    ]
+    allow += [f"writing/{p.name}" for p in sorted((SITE / "writing").glob("*.md"))]
+    allow += [f"writing/{p.name}" for p in sorted((SITE / "writing").glob("*.html"))]
+    run("git", "add", "--", *[p for p in dict.fromkeys(allow) if (SITE / p).exists()])
     diff = run("git", "diff", "--staged", "--quiet", check=False)
     if diff.returncode == 0:
         print("  no changes to commit")
     else:
         run("git", "commit", "-m", "build: regenerate site")
         print("  committed")
-    # Push
-    push = run("git", "push", "-u", "origin", "main", check=False)
-    if push.returncode != 0:
-        # Try force-with-lease fallback on initial-push conflict with auto-init README
-        pull = run("git", "pull", "--rebase", "origin", "main", check=False)
-        run("git", "push", "-u", "origin", "main")
+    # Push — de-facto trunk is a session branch; local `main` is stale by design.
+    # Pushing HEAD:main deploys the current checkout without touching local main.
+    run("git", "push", "origin", "HEAD:main")
     print("  pushed")
 
 

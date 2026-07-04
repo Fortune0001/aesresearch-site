@@ -28,3 +28,24 @@ What a production agent system decides at every step — when to trust the model
 
 What happens to your calibration when the context fills up, why compaction drops the work you need most, and the operational discipline that protects you from it. · 7 min · 2026-04-26
 
+**[The Membrane, Traffic Cop, and Director stack: how to stop prompt injection without killing your agent pipeline](membrane-traffic-cop-director.html)**
+
+Defense in depth for agentic workflows — five named roles that compose into a self-tuning human-in-the-loop system. · 14 min · 2026-07-04
+
+**[The adversarial skeptic: calibration that challenges itself](adversarial-skeptic.html)**
+
+The wrong answer that looks right is the expensive one — and the skeptic that catches it has to be suspicious of agreement, not just error. · 11 min · 2026-07-04
+
+## Capability proofs
+
+**[Context-unbounded codebase investigation: one method, three codebases, three languages](context-unbounded-investigation.html)**
+
+transformers, Kubernetes, and Ray — ~6.9M lines across four languages — investigated with no reasoning context ever holding more than a bounded working set. · 8 min · 2026-07-04
+
+**[Run report: huggingface/transformers (Python, ~2M-LOC repo)](transformers-capability-proof.html)** · 12 min · 2026-07-04
+
+**[Run report: kubernetes/kubernetes (Go, 3.6M LOC)](kubernetes-capability-proof.html)** · 5 min · 2026-07-04
+
+**[Run report: ray-project/ray (C++/Python/Java, polyglot)](ray-polyglot-capability-proof.html)** · 7 min · 2026-07-04
+
+**[Metered knowledge extraction at scale: efficiency metrics from a composable research pipeline](research-pipeline-efficiency.html)** · 4 min · 2026-07-04

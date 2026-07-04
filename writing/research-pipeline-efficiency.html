@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metered Knowledge Extraction at Scale — Efficiency Metrics from a Composable Research Pipeline — AES Research</title>
+  <meta name="description" content="2026-06-06 · Actual spend: $0 (covered by a platform subscription); all dollar figures below are API-equivalents.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a> <span class="sep">/</span> <a href="index.html">Writing</a></nav>
+<main>
+<h1 id="metered-knowledge-extraction-at-scale-efficiency-metrics-from-a-composable-research-pipeline">Metered Knowledge Extraction at Scale — Efficiency Metrics from a Composable Research Pipeline</h1>
+<p class="article-meta">Published 2026-07-04 · 4 min read</p>
+<p><strong>2026-06-06 · Actual spend: $0 (covered by a platform subscription); all dollar figures below are API-equivalents.</strong></p>
+<h2 id="the-task">The task</h2>
+<p>Turn a large, heterogeneous corpus of expert material — long-form technical YouTube (15-minute tutorials to 3-hour research interviews) plus the live web-practitioner literature — into a <strong>structured, cited, timestamp-anchored, queryable research warehouse</strong>. Done by hand this is hundreds of hours of watching, note-taking, and structuring. The question this run answers: <em>what does it cost when an agent system does it, and what is the actual binding constraint?</em></p>
+<h2 id="the-system-the-argument-is-compositional">The system (the argument is compositional)</h2>
+<p>No single model call does the work. Four primitives compose:</p>
+<ol>
+<li><strong>A decomposition contract (skill).</strong> One schema for &ldquo;what a faithful extraction is&rdquo; — frontmatter + thesis + timestamp-anchored claims/frameworks + named tools/numbers + caveats. The same contract applies to a video transcript, a web article, or a paper, so the <em>output</em> is uniform regardless of source.</li>
+<li><strong>A lean parallel dispatch substrate (tool).</strong> Stateless extraction agents launched as parallel subprocesses with the per-task content in the user message and an <strong>identical system preamble across agents</strong> — so agents share a prompt-cache key. Server integrations and auto-loaded configuration are stripped, cutting preamble tokens. Each agent reads its source, writes one warehouse entry, and reports cost and tokens.</li>
+<li><strong>A warehouse schema (architecture).</strong> Frontmatter-validated entries, per-channel and per-category indexes, cross-source syntheses. Knowledge is addressable, not a pile of transcripts.</li>
+<li><strong>Cache-aware context design.</strong> Because the preamble is stable and the volatile content sits at the tail, the prompt cache absorbs most of every call. Measured cache-hit share below.</li>
+</ol>
+<p>Cheap front-half steps (enumerate → filter → fetch auto-subtitles → clean) are deterministic scripts; only the extraction itself spends model tokens. The expensive primitive is invoked exactly where it adds value.</p>
+<h2 id="the-run-measured">The run (measured)</h2>
+<p>A single instrumented batch decomposed <strong>244 expert videos across three channels</strong>, each into a full cited warehouse entry, in ~2 hours of wall-clock:</p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Videos</th>
+<th>Cost (API-equiv)</th>
+<th>$/video</th>
+<th>Cache-hit (preamble)</th>
+<th>Wall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Channel A (tooling/agents, ~16-min avg)</td>
+<td>118</td>
+<td>$20.39</td>
+<td>$0.17</td>
+<td>73.8%</td>
+<td>49 min</td>
+</tr>
+<tr>
+<td>Channel B (research interviews, 1–3 hr)</td>
+<td>55</td>
+<td>$20.41</td>
+<td>$0.37</td>
+<td><strong>85.3%</strong></td>
+<td>43 min</td>
+</tr>
+<tr>
+<td>Channel C (agent/founder, ~25-min avg)</td>
+<td>71</td>
+<td>$12.47</td>
+<td>$0.18</td>
+<td>69.5%</td>
+<td>35 min</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>244</strong></td>
+<td><strong>$53.27</strong></td>
+<td><strong>$0.22 avg</strong></td>
+<td><strong>~78%</strong></td>
+<td><strong>~2 hr (concurrency K=5)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Token aggregate: ~27.6M cache-read + ~7.4M cache-create + ~1.14M output. <strong>The cache carried ~78% of all input</strong> — the long-form interview channel, with the biggest transcripts, had the <em>highest</em> cache hit (85.3%) because the stable preamble amortized hardest there.</p>
+<p>Unit economics: <strong>~$0.22 per fully-structured expert-video extraction, $0 actual</strong> (subscription). The same session also produced two web-sourced practitioner syntheses (context engineering; agent evaluation — 12 facet investigations + adversarial coherence audit + deep-dives + synthesis each) and an earlier 75-video channel drain, for a session total of <strong>~319 video decompositions + 2 multi-stage syntheses</strong> at <strong>~8% of one week&rsquo;s subscription quota</strong>.</p>
+<h2 id="the-finding-the-ceiling-is-throughput-not-cost-or-context">The finding: the ceiling is throughput, not cost or context</h2>
+<p>The batch stopped not because it ran out of budget and not because any context window filled — it stopped because it hit the <strong>platform&rsquo;s 5-hour rolling rate limit</strong> after ~244 calls. At $0.22/video the <em>budget</em> wall is hundreds of videos away; the <em>context</em> wall never appears (each extraction is independent and bounded); the wall you actually hit is <strong>rate</strong>.</p>
+<p>That reframes scaling. The lever isn&rsquo;t a bigger context window or a cheaper model — it&rsquo;s <strong>pacing the same composable pipeline across rate windows</strong> (lower concurrency + spread over time, or schedule across windows). The architecture is already context-unbounded and cost-trivial; the remaining engineering is throughput choreography, which is a scheduling problem, not a model problem.</p>
+<h2 id="why-this-is-the-interesting-result">Why this is the interesting result</h2>
+<p>The expensive, hard-to-scale part of research — faithful structured extraction from long, messy expert sources — turns out to be the <em>cheap, embarrassingly-parallel</em> part once the contract + dispatch + schema + caching compose. The work that remains scarce is <strong>taste</strong> (which sources, which syntheses matter) and <strong>rate budget</strong> (how fast the platform lets you go). Everything in between is a metered, resumable batch at ~$0.22/source and $0 marginal cost.</p>
+<hr>
+<p><em>All figures come directly from the run&rsquo;s per-batch cost and token telemetry, measured on the day of the run.</em></p>
+<div class="post-footer"><p class="prev-next"><a href="ray-polyglot-capability-proof.html">&larr; Previous</a> · <a href="transformers-capability-proof.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
+</main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
+</body>
+</html>

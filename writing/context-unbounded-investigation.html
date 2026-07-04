@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Context-unbounded codebase investigation: one method, three codebases, three languages — AES Research</title>
+  <meta name="description" content="A multi-agent architecture investigated huggingface/transformers, kubernetes/kubernetes, and ray-project/ray — ~6.9M lines across Python, Go, C++, and Java — and produced a coherent architecture-level synthesis of each, with no single model context ever holding more than a bounded working set. This is the method paper for the three runs.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a> <span class="sep">/</span> <a href="index.html">Writing</a></nav>
+<main>
+<h1 id="context-unbounded-codebase-investigation-one-method-three-codebases-three-languages">Context-unbounded codebase investigation: one method, three codebases, three languages</h1>
+<p class="article-meta">Published 2026-07-04 · 8 min read</p>
+<p><em>A multi-agent architecture investigated huggingface/transformers, kubernetes/kubernetes, and ray-project/ray — ~6.9M lines across Python, Go, C++, and Java — and produced a coherent architecture-level synthesis of each, with no single model context ever holding more than a bounded working set. This is the method paper for the three runs.</em></p>
+<hr>
+<h2 id="the-claim-and-why-it-needs-three-proofs">The claim, and why it needs three proofs</h2>
+<p>Most LLM-based code analysis is bounded by the model&rsquo;s context window: the working memory of a single session is fixed, so the size of what you can understand appears fixed too. The architecture demonstrated here makes the opposite claim: <strong>investigation scope can be unbounded, because no reasoning context ever needs to hold the whole target.</strong> Scope lives in the orchestration structure; the window only ever holds one bounded chunk.</p>
+<p>A claim like that is cheap to state and easy to fake at small scale, which is why it took three runs to earn it:</p>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Codebase</th>
+<th>Language(s)</th>
+<th>Scale (measured)</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>huggingface/transformers</code></td>
+<td>Python</td>
+<td>~2M-LOC repo; ~962K LOC analyzed across 450 model families</td>
+<td>The capability exists at all</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>kubernetes/kubernetes</code></td>
+<td>Go</td>
+<td>3.6M LOC; 2,001 packages investigated</td>
+<td>Generalizes across domain — non-AI, distributed-systems, a different language</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>ray-project/ray</code></td>
+<td>C++ / Python / Java</td>
+<td>1.37M LOC; 442 core directories</td>
+<td>Generalizes across <em>languages in a single run</em> — synthesis that stitches findings across the language boundary</td>
+</tr>
+</tbody>
+</table>
+<p>Three codebases, four languages, ~2,893 investigated targets, <strong>100 sub-investigations</strong>, 9,484 raw findings, 770 confirmed hypotheses — and, run end to end on one local workstation, unattended, for a combined <strong>~$795 API-equivalent ($0 out of pocket, subscription-covered), with zero lost work units across all three runs.</strong></p>
+<p>The rest of this piece is how, and what the runs measured about their own method along the way.</p>
+<hr>
+<h2 id="the-composition">The composition</h2>
+<p>Four primitives compose into the capability. Each bounds a different dimension, and the argument is the composition, not any single piece.</p>
+<p><strong>Hierarchical synthesis bounds context.</strong> The target is partitioned into independent sub-investigations, each running a complete map → hypothesize → confirm → synthesize loop inside a working set of roughly one chunk (~64K LOC in run 1). Sub-syntheses feed coordinators; coordinators feed a master. At every tier, the fan-in is capped — the master reads a dozen mid-syntheses, never a hundred raw investigations. That flatness <em>is</em> the context-unbounded property: adding scope adds chunks, not context.</p>
+<p><strong>Parallel fan-out bounds wall-clock.</strong> Independent subs run concurrently inside a measured hardware-safe band (run 3 peaked at 15 concurrent processes and ~4 GB RAM without leaving the envelope). Total time tracks the depth of the hierarchy, not the breadth of the target.</p>
+<p><strong>Cadenced execution bounds hardware stress.</strong> Work decomposes into scheduled, time-capped executions — 90-minute caps in run 1, ~74-minute caps in run 2, a 4-hour batch ceiling in run 3. No single execution can exceed the machine&rsquo;s safety envelope, so a 14-day investigation is as safe as a 14-minute one.</p>
+<p><strong>Self-healing bounds reliability.</strong> Timeouts, budget-cap hits, and transient failures pause and retry rather than losing work. Run 2 absorbed 10 timeouts and 5 budget-cap hits — and crossed a provider quota-reset boundary unattended — with zero chunks lost. Run 3 absorbed 8 more. The reliability claim is exercised, not assumed.</p>
+<p>Together: <em>investigate an arbitrarily large codebase, at bounded per-tier context, in bounded wall-clock, on bounded hardware, unattended.</em></p>
+<hr>
+<h2 id="the-spine-how-the-hierarchy-earned-its-third-level">The spine: how the hierarchy earned its third level</h2>
+<p>The most useful result in the series is not any single synthesis. It is a scaling measurement the method produced about itself.</p>
+<p><strong>Run 1 found the ceiling.</strong> Transformers ran as a two-level hierarchy: 15 sub-investigations feeding one master directly. It completed — but the cross-investigation briefing, at 15 sub-syntheses of ~1.5K characters each, hit a soft size cap and clipped the tail of the final pattern. That was the first <em>measured</em> datapoint for a limit that had previously only been projected: a two-level hierarchy&rsquo;s master brief grows linearly with sub-count, and saturates around 15 subs.</p>
+<p><strong>Run 2 removed it.</strong> Kubernetes required 67 sub-investigations — far past the measured ceiling — so the hierarchy grew a middle tier: 67 subs → 12 mid-coordinators → 1 master. Fan-in stayed bounded at every level (the master read 12 mids; each mid read ~6 subs; each sub investigated ~30 packages). Targets grew 4.4× over run 1; the master&rsquo;s brief did not grow at all. The synthesis came back complete — 12,056 characters, untruncated.</p>
+<p><strong>Run 3 re-validated it at a different scale.</strong> Ray ran the same three-level structure at 18 → 3 → 1 and returned a complete, untruncated master synthesis again — confirming the structure works when it is barely needed, not just when it is stressed.</p>
+<p>That arc — <em>measure the ceiling, build the tier that removes it, re-validate across scales</em> — is what &ldquo;the architecture scales&rdquo; actually means in this series. Not a projection from a small demo: a limit found empirically, a structural fix, and a confirmation on the other side.</p>
+<hr>
+<h2 id="what-the-investigations-found">What the investigations found</h2>
+<p>Each run produced an architecture-level account of its target that converged across independent, mutually-blind sub-investigations. The convergence is itself the epistemic result: sub-investigations that never saw each other&rsquo;s work arriving at the same structural account means the patterns belong to the system under study, not to any one analysis.</p>
+<p><strong>Transformers</strong> resolved into a registry-driven, configuration-first federation: ~450 self-contained model packages held coherent not by deep inheritance but by a small set of contracts — the configuration object as the true public API, a backbone-plus-task-head seam as the universal composability point, containment (not inheritance) for multimodal composition, and a quiet architectural fact with a future: the contract does not privilege attention, which is why FFT cores, state-space models, and linear-recurrence models already live in the library without breaking it. Six cross-cluster patterns, all 15 subs blind to one another; 117 confirmed hypotheses, 1 refuted.</p>
+<p><strong>Kubernetes</strong> resolved into a single architectural cell stamped out at scale: every API resource traverses the same define → generate → cache → reconcile pipeline, the watch-reconcile loop recurs fractally at five scales, and ~8 code-generator templates — not the ~2,000 packages — are the real codebase. All 12 mid-syntheses converged on that account with zero dissent; 494 confirmed hypotheses, 12 refuted, 0 left open.</p>
+<p><strong>Ray</strong> produced the finding the series exists to demonstrate — a claim that requires holding three languages in one investigation: <em>all</em> distributed computation in Ray, across seven-plus domain libraries in three languages, funnels losslessly through exactly three C++ kernel primitives (task, actor, ObjectRef), with type erasure at the wire boundary as the actual cross-language contract. No single-language pass can even state that claim, because the evidence for it lives on both sides of the language boundary at once. Three mid-syntheses, zero dissent, near-identical vocabulary; 159 confirmed, 11 refuted.</p>
+<p>Each run also emitted its own coverage frontier — the ranked list of what a next bounded run should investigate. The refuted-hypothesis counts (1, 12, 11) are worth reading as what they are: the investigations generate falsifiable hypotheses and then kill the ones that fail confirmation, which is the property that separates investigation from summarization.</p>
+<hr>
+<h2 id="the-economics-measured">The economics, measured</h2>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Productive compute</th>
+<th>Calendar</th>
+<th>API-equivalent</th>
+<th>Out-of-pocket</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>transformers</td>
+<td>~18.3 hr across 16 executions</td>
+<td>14 days, unattended</td>
+<td>≈$35</td>
+<td>$0</td>
+</tr>
+<tr>
+<td>kubernetes</td>
+<td>11 cadenced fires</td>
+<td>~2 days, unattended</td>
+<td>~$637</td>
+<td>$0</td>
+</tr>
+<tr>
+<td>ray</td>
+<td>5 batched launches, ~5.2 hr</td>
+<td>one afternoon</td>
+<td>$123.24</td>
+<td>$0</td>
+</tr>
+</tbody>
+</table>
+<p>The pattern in the cost column matters more than the totals. Nothing here required a cluster, an enterprise contract, or a research budget — one workstation, subscription-covered model capacity, and an orchestration layer that treats calendar time as the elastic resource. The binding constraints, in practice, were scheduling constraints: execution caps, rate windows, safety envelopes. Those are engineering problems with engineering answers, which is the entire reason the method scales.</p>
+<hr>
+<h2 id="what-this-composes-with">What this composes with</h2>
+<p>This method is one layer of a larger discipline I have written about elsewhere. The hierarchy&rsquo;s bounded tiers are an application of the same geometry the calibration essays describe — keeping every decision inside territory where the distance between yes and no stays wide. The unattended runs sit on the self-tuning human-in-the-loop machinery described in the orchestration essays: phase-gated execution, health telemetry, interrupts that come back when the environment shifts. And the verification posture — hypotheses confirmed against source, refutations recorded, truncations disclosed and reconstructed from cited underlying material — is the same adversarial-review discipline the rest of the stack runs on.</p>
+<p>The three full run reports — per-run metrics, the complete pattern catalogs, fault accounting, and independently-verifiable target commits — accompany this piece: <a href="transformers-capability-proof.html">transformers</a>, <a href="kubernetes-capability-proof.html">Kubernetes</a>, and <a href="ray-polyglot-capability-proof.html">Ray</a>. A fourth companion, <a href="research-pipeline-efficiency.html">Metered knowledge extraction at scale</a>, measures the same orchestration discipline applied to a research-corpus workload rather than a codebase.</p>
+<hr>
+<p><em>Daniel Higuera builds production agentic systems through AES Research. Companion essays: <a href="distance-yes-and-no.html">Calibration, boundary layers, and the distance between yes and no</a>, <a href="6-tier-maturity.html">The 6-tier agent maturity model</a>, <a href="two-tier-memory.html">Two-tier memory for production agents</a>, <a href="context-window-battery.html">The context window is a battery</a>, and <a href="attention-management.html">Attention management</a>.</em></p>
+<div class="post-footer"><p class="prev-next"><a href="attention-management.html">&larr; Previous</a> · <a href="context-window-battery.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
+</main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+</footer>
+</div>
+</body>
+</html>
