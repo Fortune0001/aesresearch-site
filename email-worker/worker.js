@@ -9,7 +9,7 @@
  *   3. Global 50/day circuit breaker via KV (catastrophic-spam defense).
  *   4. Rule-based template selection: T2 (recruiter) if From domain looks like
  *      an ATS / recruiter platform; T3 (peer) otherwise. T1 fallback.
- *   5. Forward the original message to Daniel's gmail (handled by Email Routing
+ *   5. Forward the original message to the configured archive address (handled by Email Routing
  *      rules at the dashboard level — this Worker doesn't need to do it explicitly).
  *
  * Bindings (wrangler.toml):
@@ -362,11 +362,11 @@ export default {
         if (globalKey && env.AUTO_ACK_KV) {
           await env.AUTO_ACK_KV.put(globalKey, String(nextCount), { expirationTtl: 48 * 3600 });
         }
-        // Forward the ORIGINAL message to Daniel's gmail so it archives.
+        // Forward the ORIGINAL message to the archive address (Worker var) so it archives.
         try {
-          await message.forward('dhiguera1980@gmail.com');
+          if (env.FORWARD_ADDRESS) await message.forward(env.FORWARD_ADDRESS);
         } catch (fwdErr) {
-          console.error(`forward to gmail failed: ${(fwdErr.message || fwdErr).slice(0, 200)}`);
+          console.error(`forward to archive failed: ${(fwdErr.message || fwdErr).slice(0, 200)}`);
         }
       } catch (sendErr) {
         // DMARC failures, rate-limit-from-Cloudflare, malformed-message rejects

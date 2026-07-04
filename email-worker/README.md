@@ -17,7 +17,7 @@ The Worker handles `email()` events but only fires when Email Routing dispatches
 3. Email Routing → Routing rules → edit the `contact@aesresearch.ai` rule
 4. Change Action from "Send to an email" to "Send to a Worker"
 5. Select `aesresearch-email-ack`
-6. (Optional) Add a second rule: matching action "Send to an email" → dhiguera1980@gmail.com so the original still archives to Gmail in addition to the auto-ack firing
+6. (Optional) Add a second rule: matching action "Send to an email" → your personal archive address so the original still archives off-platform in addition to the auto-ack firing
 
 Alternatively, the Worker itself could call `message.forward(...)` after replying — but the dashboard-level rule is cleaner.
 

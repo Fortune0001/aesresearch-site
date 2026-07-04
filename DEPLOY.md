@@ -11,7 +11,7 @@ Nothing here hits the Anthropic API. P0 has zero LLM endpoints; the new `/ask` e
 Verify state before any deploy:
 
 ```bash
-cd /c/Users/DH/Documents/AI_Space/Career/artifacts/landing_site
+cd <repo-root>   # your local clone of the site repo
 
 # Static site builds clean
 python build.py
@@ -98,14 +98,14 @@ Cloudflare dashboard → `aesresearch.ai` zone → **Email** → **Email Routing
 
 After this, every inbound to `contact@aesresearch.ai` flows through the Email Worker → applies templates / loop guards → fires auto-reply via `message.reply()`. The original message is archived because the Worker doesn't drop it (it just generates a reply alongside).
 
-**Optional:** add a parallel rule `contact@aesresearch.ai` → "Send to an email" → `dhiguera1980@gmail.com` so the original ALSO archives to your Gmail. Otherwise you'll see only auto-replies, not originals.
+**Optional:** add a parallel rule `contact@aesresearch.ai` → "Send to an email" → your personal archive address so the original ALSO archives off-platform. Otherwise you'll see only auto-replies, not originals.
 
 ---
 
 ## 6. Deploy the static site (1 min)
 
 ```bash
-cd /c/Users/DH/Documents/AI_Space/Career/artifacts/landing_site
+cd <repo-root>   # your local clone of the site repo
 WRITE_CNAME=1 python build.py --all
 ```
 
