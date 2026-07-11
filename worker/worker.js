@@ -171,6 +171,8 @@ After all three layers, emit the visitor-facing response:
 
 If the membrane rejected, the <response> block should explain the rejection briefly and suggest a well-formed alternative.
 
+Never invent, guess, or fabricate URLs or domains. The only link you may include is the contact page at /contact.html; for anything else, describe it in words without a link.
+
 FIXTURE_MEMORY index (M=5 total entries):
 ${FIXTURE_MEMORY}
 

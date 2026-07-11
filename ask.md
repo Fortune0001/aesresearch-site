@@ -167,13 +167,15 @@ What the agent is not: it doesn't have access to the internet, your codebase, or
   function minimalMarkdown(text) {
     return text
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      // [label](url) → link. Allow http(s), mailto, and site-relative/anchor URLs;
-      // any other scheme (javascript:, data:, …) falls back to the plain label.
+      // [label](url) → link, but only to this site (root-relative, anchor,
+      // dot-relative, or aesresearch.ai) or mailto:. Agent output can hallucinate
+      // URLs, so any other target — external domains, protocol-relative //host,
+      // javascript:/data: — renders as the plain label, never a clickable link.
       // label + url are already HTML-escaped above.
       .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, label, url) {
-        return /^(https?:\/\/|mailto:|[/#]|\.{1,2}\/)/i.test(url)
-          ? '<a href="' + url + '" rel="noopener">' + label + '</a>'
-          : label;
+        var safe = /^\/(?!\/)/.test(url) || /^#/.test(url) || /^\.{1,2}\//.test(url)
+          || /^mailto:/i.test(url) || /^https?:\/\/(www\.)?aesresearch\.ai([/?#]|$)/i.test(url);
+        return safe ? '<a href="' + url + '" rel="noopener">' + label + '</a>' : label;
       })
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
