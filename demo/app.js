@@ -1,6 +1,6 @@
 /* AES Research live demo — frontend client
  *
- * Talks to the Cloudflare Worker at /api/chat (streaming SSE) and /api/fire-routine.
+ * Talks to the Cloudflare Worker at /api/chat (streaming SSE).
  * The Worker keeps the Anthropic API key and the Routine bearer token server-side.
  *
  * Wire protocol (SSE events from /api/chat):
@@ -14,7 +14,6 @@
   const form = document.getElementById('chat-form');
   const input = document.getElementById('chat-input');
   const sendBtn = document.getElementById('send-btn');
-  const fireBtn = document.getElementById('fire-routine-btn');
   const resetBtn = document.getElementById('reset-btn');
   const convo = document.getElementById('conversation');
   const streamLog = document.getElementById('stream-log');
@@ -82,7 +81,6 @@
     appendTurn('user', userText);
     const assistantBody = appendTurn('assistant', '');
     sendBtn.disabled = true;
-    fireBtn.disabled = true;
 
     // Collected assistant text for appending to history after stream completes
     let assistantText = '';
@@ -160,47 +158,7 @@
         history.push({ role: 'assistant', content: assistantText });
       }
       sendBtn.disabled = false;
-      fireBtn.disabled = false;
       input.focus();
-    }
-  }
-
-  async function fireRoutine(userText) {
-    if (!userText.trim()) {
-      appendStreamError('Type a prompt first.');
-      return;
-    }
-    sendBtn.disabled = true;
-    fireBtn.disabled = true;
-    appendLayer('attention', 'routing to Claude Routine', 'Dispatching to a pre-configured routine for longer-horizon autonomous work. Response is a session URL; open it in a new tab to watch.');
-    try {
-      const res = await fetch(`${API_BASE}/fire-routine`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: userText }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const httpErr = new Error(data.error || `HTTP ${res.status}`);
-        httpErr.status = res.status;
-        throw httpErr;
-      }
-      const url = data.claude_code_session_url;
-      if (url) {
-        appendLayer('response', 'routine fired', `Session URL: ${url}`);
-        window.open(url, '_blank', 'noopener');
-      } else {
-        appendStreamError('Routine fire returned no session URL.');
-      }
-    } catch (err) {
-      if ((err.status && err.status >= 500) || err.name === 'TypeError') {
-        appendStreamError('Routine dispatch is temporarily offline. The contact page is the reliable path in the meantime.');
-      } else {
-        appendStreamError('Routine fire failed: ' + err.message);
-      }
-    } finally {
-      sendBtn.disabled = false;
-      fireBtn.disabled = false;
     }
   }
 
@@ -210,12 +168,6 @@
     if (!text) return;
     input.value = '';
     streamChat(text);
-  });
-
-  fireBtn.addEventListener('click', () => {
-    const text = input.value.trim();
-    if (text) input.value = '';
-    fireRoutine(text);
   });
 
   // Enter submits, Shift+Enter newline
