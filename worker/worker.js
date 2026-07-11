@@ -8,7 +8,6 @@ import { ASK_CORPUS_DOCUMENTS, ASK_CORPUS_TOKEN_ESTIMATE } from './corpus.js';
  *                              System prompt forces the agent to emit structured layer
  *                              decisions (membrane / memory / attention) before the final
  *                              response, which the frontend renders in the thought-stream panel.
- *   POST /api/fire-routine   — fires a pre-configured Claude Routine (returns a session URL).
  *   POST /api/contact        — inbound contact-form submissions; sent via Email Routing.
  *   POST /api/ask            — synchronous Haiku-based Q&A against the published corpus.
  *                              SSE stream; grounded in essays + skills + about.
@@ -114,7 +113,6 @@ async function incrementRoutineQuota(env) {
 // because each fire draws down Daniel's daily Routine cap.
 const LIMITS = {
   '/chat': 30,
-  '/fire-routine': 5,
   '/contact': 5,
   '/ask': 30,       // Haiku is cheap; 30/hr matches /chat
   '/ask-deep': 3,   // Routine fires; tighter than /fire-routine (visitor-facing)
@@ -424,46 +422,6 @@ async function handleChat(request, env, origin) {
   });
 }
 
-async function handleFireRoutine(request, env, origin) {
-  const body = await request.json().catch(() => ({}));
-  const text = typeof body.text === 'string' ? body.text.slice(0, 8000) : '';
-  if (!text.trim()) {
-    return new Response(JSON.stringify({ error: 'empty text' }), {
-      status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-    });
-  }
-  if (!env.ROUTINE_URL || !env.ROUTINE_TOKEN) {
-    return new Response(JSON.stringify({ error: 'ROUTINE_URL or ROUTINE_TOKEN not configured on worker' }), {
-      status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-    });
-  }
-  const quota = await checkRoutineQuota(env);
-  if (!quota.allowed) {
-    return new Response(JSON.stringify({ error: 'daily routine quota reached' }), {
-      status: 503, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-    });
-  }
-  const upstream = await fetch(env.ROUTINE_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${env.ROUTINE_TOKEN}`,
-      'anthropic-beta': BETA_HEADER,
-      'anthropic-version': API_VERSION,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text }),
-  });
-  const data = await upstream.json().catch(() => ({}));
-  if (!upstream.ok) {
-    return new Response(JSON.stringify({ error: data.error || `upstream ${upstream.status}` }), {
-      status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-    });
-  }
-  await incrementRoutineQuota(env);
-  return new Response(JSON.stringify(data), {
-    status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-  });
-}
 
 // ---------------------------------------------------------------------------
 // /contact handler — inbound contact-form submissions
@@ -968,7 +926,6 @@ export default {
 
     let response;
     if (normalized === '/chat') response = await handleChat(request, env, origin);
-    else if (normalized === '/fire-routine') response = await handleFireRoutine(request, env, origin);
     else if (normalized === '/contact') response = await handleContact(request, env, origin, ip);
     else if (normalized === '/ask') response = await handleAsk(request, env, origin, ip);
     else if (normalized === '/ask-deep') response = await handleAskDeep(request, env, origin, ip);
