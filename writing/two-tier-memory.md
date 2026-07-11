@@ -189,3 +189,22 @@ Which is the right outcome. The infrastructure you stop thinking about is the in
 *Daniel Higuera — AES Research — 2026*
 
 *Part of a series on agent architecture patterns. Upcoming: cross-project director agents, skeptic membranes, and the UAT residual-context-gap.*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, April 26). *Two-tier memory for production agents: what chat systems don't tell you*. AES Research. https://aesresearch.ai/writing/two-tier-memory.html
+
+```bibtex
+@misc{higuera2026twotier,
+  author = {Higuera, Daniel},
+  title = {Two-tier memory for production agents: what chat systems don't tell you},
+  year = {2026},
+  month = {apr},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/two-tier-memory.html}
+}
+```

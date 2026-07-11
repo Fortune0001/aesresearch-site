@@ -1,0 +1,13 @@
+# ai.txt — aesresearch.ai
+# Purpose: machine-readable statement of NON-CONSENT to the use of this
+# site's content for AI/ML model training, in robots.txt-style syntax.
+# This complements /robots.txt (named training crawlers denied there),
+# /.well-known/tdmrep.json (W3C TDMRep reservation), and the human-readable
+# licensing terms at /license.html.
+#
+# Written works on this site are CC BY-SA 4.0 for human reuse with
+# attribution. That license does NOT grant permission for AI/ML training.
+# For training or data-mining licensing, use the contact page.
+
+User-Agent: *
+Disallow: /

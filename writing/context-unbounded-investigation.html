@@ -5,8 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Context-unbounded codebase investigation: one method, three codebases, three languages — AES Research</title>
   <meta name="description" content="A multi-agent architecture investigated huggingface/transformers, kubernetes/kubernetes, and ray-project/ray — ~6.9M lines across Python, Go, C++, and Java — and produced a coherent architecture-level synthesis of each, with no single model context ever holding more than a bounded working set. This is the method paper for the three runs.">
+  <link rel="canonical" href="https://aesresearch.ai/writing/context-unbounded-investigation.html">
+  <meta name="tdm-reservation" content="1">
+  <meta name="robots" content="noai, noimageai">
   <link rel="stylesheet" href="../style.css">
   <link rel="icon" href="data:,">
+  <meta name="citation_title" content="Context-unbounded codebase investigation: one method, three codebases, three languages">
+  <meta name="citation_author" content="Daniel Higuera">
+  <meta name="citation_publication_date" content="2026/07/04">
+  <meta name="citation_fulltext_html_url" content="https://aesresearch.ai/writing/context-unbounded-investigation.html">
+  <meta name="citation_language" content="en">
+  <meta name="citation_publisher" content="AES Research">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "Context-unbounded codebase investigation: one method, three codebases, three languages",
+  "author": {
+    "@type": "Person",
+    "name": "Daniel Higuera"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AES Research",
+    "url": "https://aesresearch.ai/"
+  },
+  "datePublished": "2026-07-04",
+  "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "url": "https://aesresearch.ai/writing/context-unbounded-investigation.html",
+  "inLanguage": "en"
+}
+  </script>
 </head>
 <body>
 <div class="page">
@@ -120,10 +149,26 @@
 <p>The three full run reports — per-run metrics, the complete pattern catalogs, fault accounting, and independently-verifiable target commits — accompany this piece: <a href="transformers-capability-proof.html">transformers</a>, <a href="kubernetes-capability-proof.html">Kubernetes</a>, and <a href="ray-polyglot-capability-proof.html">Ray</a>. A fourth companion, <a href="research-pipeline-efficiency.html">Metered knowledge extraction at scale</a>, measures the same orchestration discipline applied to a research-corpus workload rather than a codebase.</p>
 <hr>
 <p><em>Daniel Higuera builds production agentic systems through AES Research. Companion essays: <a href="distance-yes-and-no.html">Calibration, boundary layers, and the distance between yes and no</a>, <a href="6-tier-maturity.html">The 6-tier agent maturity model</a>, <a href="two-tier-memory.html">Two-tier memory for production agents</a>, <a href="context-window-battery.html">The context window is a battery</a>, and <a href="attention-management.html">Attention management</a>.</em></p>
+<hr>
+<p><em>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</em></p>
+<h3 id="cite-this-essay">Cite this essay</h3>
+<blockquote>
+<p>Higuera, D. (2026, July 4). <em>Context-unbounded codebase investigation: one method, three codebases, three languages</em>. AES Research. https://aesresearch.ai/writing/context-unbounded-investigation.html</p>
+</blockquote>
+<pre><code class="language-bibtex">@misc{higuera2026unbounded,
+  author = {Higuera, Daniel},
+  title = {Context-unbounded codebase investigation: one method, three codebases, three languages},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/context-unbounded-investigation.html}
+}
+</code></pre>
 <div class="post-footer"><p class="prev-next"><a href="attention-management.html">&larr; Previous</a> · <a href="context-window-battery.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
 </main>
 <footer>
 <p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+<p class="footer-legal">Written works licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> &middot; code licensed separately &middot; <a href="../license.html">Licensing &amp; citation</a></p>
 </footer>
 </div>
 </body>

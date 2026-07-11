@@ -16,6 +16,7 @@ Zero external dependencies beyond `markdown` (pip install markdown).
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import os
 import re
@@ -33,6 +34,71 @@ DOMAIN = os.environ.get("CUSTOM_DOMAIN", "aesresearch.ai")
 SITE = Path(__file__).resolve().parent
 LAYOUT = (SITE / "layouts" / "default.html").read_text(encoding="utf-8")
 TOKEN_VARS = ("GITHUB_TOKEN_CLASSIC", "GITHUB_TOKEN_FG_Admin")  # prefer classic; fall back to fine-grained
+
+# ---------- licensing / citation metadata ----------
+SITE_URL = "https://aesresearch.ai"
+CITATION_META_PATH = SITE / "citation_meta.json"
+if CITATION_META_PATH.exists():
+    CITATION_META: dict = json.loads(CITATION_META_PATH.read_text(encoding="utf-8"))
+else:
+    CITATION_META = {}
+
+
+def canonical_url_for(dst: Path) -> str:
+    """Absolute canonical URL for a rendered page. Root index.html -> bare domain root."""
+    if dst == SITE / "index.html":
+        return f"{SITE_URL}/"
+    return f"{SITE_URL}/{dst.relative_to(SITE).as_posix()}"
+
+
+def license_href_for(css_rel: str) -> str:
+    """Mirror css_path's relative-depth convention for the footer license link."""
+    return css_rel.replace("style.css", "license.html")
+
+
+def build_article_head_extra(slug: str, title: str, canonical: str) -> str:
+    """Highwire citation meta + ScholarlyArticle JSON-LD for an essay with a
+    citation_meta.json entry. Missing entries degrade to '' with a warning
+    (do not fail the build)."""
+    meta = CITATION_META.get(slug)
+    if not meta:
+        print(f"  WARNING: no citation_meta.json entry for essay '{slug}' — head_extra left empty")
+        return ""
+    date = meta["date"]  # YYYY-MM-DD
+    y, m, d = date.split("-")
+    title_attr = html.escape(title, quote=True)
+    highwire = (
+        f'  <meta name="citation_title" content="{title_attr}">\n'
+        f'  <meta name="citation_author" content="Daniel Higuera">\n'
+        f'  <meta name="citation_publication_date" content="{y}/{m}/{d}">\n'
+        f'  <meta name="citation_fulltext_html_url" content="{canonical}">\n'
+        f'  <meta name="citation_language" content="en">\n'
+        f'  <meta name="citation_publisher" content="AES Research">\n'
+    )
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "ScholarlyArticle",
+        "headline": title,
+        "author": {"@type": "Person", "name": "Daniel Higuera"},
+        "publisher": {"@type": "Organization", "name": "AES Research", "url": f"{SITE_URL}/"},
+        "datePublished": date,
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "url": canonical,
+        "inLanguage": "en",
+    }
+    script = f'  <script type="application/ld+json">\n{json.dumps(ld, indent=2)}\n  </script>\n'
+    return highwire + script
+
+
+def build_home_head_extra(canonical: str) -> str:
+    """WebSite JSON-LD for the homepage."""
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "AES Research",
+        "url": canonical,
+    }
+    return f'  <script type="application/ld+json">\n{json.dumps(ld, indent=2)}\n  </script>\n'
 
 
 # ---------- token loading ----------
@@ -156,7 +222,8 @@ def make_nav(kind: str, root_path: str = "index.html") -> str:
 
 def render_md(src: Path, dst: Path, css_rel: str, is_article: bool,
               prev_slug: str | None = None, next_slug: str | None = None,
-              nav_kind: str | None = None, nav_root: str = "index.html") -> None:
+              nav_kind: str | None = None, nav_root: str = "index.html",
+              head_extra: str = "") -> None:
     md_text = src.read_text(encoding="utf-8")
     title, desc = extract_title_and_description(md_text)
     body_html = markdown.markdown(
@@ -200,17 +267,20 @@ def render_md(src: Path, dst: Path, css_rel: str, is_article: bool,
     # and makes browser tabs / OG embeds readable.
     is_home = (dst.name == "index.html" and dst.parent == SITE)
     title_full = title if (is_home or title == "AES Research") else f"{title} — AES Research"
-    html = LAYOUT.format(
+    page_html = LAYOUT.format(
         title=title,
         title_full=title_full,
         description=desc,
         css_path=css_rel,
+        canonical_url=canonical_url_for(dst),
+        head_extra=head_extra,
+        license_href=license_href_for(css_rel),
         nav=make_nav(nav_kind, root_path=nav_root),
         body=body_html,
         footer_tagline="",
     )
     dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text(html, encoding="utf-8")
+    dst.write_text(page_html, encoding="utf-8")
     print(f"  built {dst.relative_to(SITE)}")
 
 
@@ -224,7 +294,8 @@ def build() -> None:
     if result.returncode != 0:
         print(f"  WARNING: build_corpus.py exited {result.returncode} — continuing build")
     # Landing page
-    render_md(SITE / "index.md", SITE / "index.html", "style.css", is_article=False)
+    render_md(SITE / "index.md", SITE / "index.html", "style.css", is_article=False,
+              head_extra=build_home_head_extra(canonical_url_for(SITE / "index.html")))
     # Contact page (if present)
     if (SITE / "contact.md").exists():
         render_md(SITE / "contact.md", SITE / "contact.html", "style.css", is_article=False)
@@ -236,6 +307,9 @@ def build() -> None:
         render_md(SITE / "skills.md", SITE / "skills.html", "style.css", is_article=False)
     if (SITE / "about.md").exists():
         render_md(SITE / "about.md", SITE / "about.html", "style.css", is_article=False)
+    # Licensing & citation page
+    if (SITE / "license.md").exists():
+        render_md(SITE / "license.md", SITE / "license.html", "style.css", is_article=False)
     # Writing index lives in writing/ subdirectory so it shares URL space with the essays
     if (SITE / "writing-index.md").exists():
         (SITE / "writing").mkdir(exist_ok=True)
@@ -260,8 +334,11 @@ def build() -> None:
             html_path = md_path.with_suffix(".html")
             prev_slug = essays[i-1].stem if i > 0 else None
             next_slug = essays[i+1].stem if i < len(essays) - 1 else None
+            slug = md_path.stem
+            essay_title, _ = extract_title_and_description(md_path.read_text(encoding="utf-8"))
+            head_extra = build_article_head_extra(slug, essay_title, canonical_url_for(html_path))
             render_md(md_path, html_path, "../style.css", is_article=True,
-                      prev_slug=prev_slug, next_slug=next_slug)
+                      prev_slug=prev_slug, next_slug=next_slug, head_extra=head_extra)
     # Ensure .nojekyll
     (SITE / ".nojekyll").touch()
     # CNAME only when --with-cname is passed; otherwise site serves at github.io default
@@ -310,6 +387,8 @@ def deploy() -> None:
         "contact.md", "contact.html", "ask.md", "ask.html",
         "skills.md", "skills.html", "writing-index.md",
         "writing/index.html", "worker/corpus.js",
+        "license.md", "license.html", "citation_meta.json",
+        "robots.txt", "ai.txt", ".well-known/tdmrep.json",
     ]
     allow += [f"writing/{p.name}" for p in sorted((SITE / "writing").glob("*.md"))]
     allow += [f"writing/{p.name}" for p in sorted((SITE / "writing").glob("*.html"))]

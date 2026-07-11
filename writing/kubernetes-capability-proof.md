@@ -61,3 +61,22 @@ The investigation maps its own coverage frontier as it runs. It flagged five are
 ## Provenance
 
 Every figure above is measured, not estimated: scale figures come from a direct count on the clone at the stated commit, and hierarchy, findings, convergence, reliability, and cost figures come from the run's own measurement records and per-fire usage logs. The target commit is publicly resolvable on GitHub, so the scale measurements are independently reproducible.
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)*. AES Research. https://aesresearch.ai/writing/kubernetes-capability-proof.html
+
+```bibtex
+@misc{higuera2026kubernetes,
+  author = {Higuera, Daniel},
+  title = {Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/kubernetes-capability-proof.html}
+}
+```

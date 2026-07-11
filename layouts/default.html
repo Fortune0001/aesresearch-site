@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title_full}</title>
   <meta name="description" content="{description}">
+  <link rel="canonical" href="{canonical_url}">
+  <meta name="tdm-reservation" content="1">
+  <meta name="robots" content="noai, noimageai">
   <link rel="stylesheet" href="{css_path}">
   <link rel="icon" href="data:,">
-</head>
+{head_extra}</head>
 <body>
 <div class="page">
 {nav}<main>
@@ -15,6 +18,7 @@
 </main>
 <footer>
 {footer_tagline}<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+<p class="footer-legal">Written works licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> &middot; code licensed separately &middot; <a href="{license_href}">Licensing &amp; citation</a></p>
 </footer>
 </div>
 </body>

@@ -77,3 +77,22 @@ A property of the hierarchy is that it emits its own frontier: the investigation
 - Ray architecture whitepapers: <https://docs.ray.io/en/latest/ray-contribute/whitepaper.html>
 - Java JNI binding surface: <https://github.com/ray-project/ray/tree/master/src/ray/core_worker/lib/java>
 - Prior-run targets: <https://github.com/huggingface/transformers> · <https://github.com/kubernetes/kubernetes>
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *Context-Unbounded Codebase Investigation — Polyglot Capability Proof on Ray (1.37M LOC, Three Languages)*. AES Research. https://aesresearch.ai/writing/ray-polyglot-capability-proof.html
+
+```bibtex
+@misc{higuera2026ray,
+  author = {Higuera, Daniel},
+  title = {Context-Unbounded Codebase Investigation — Polyglot Capability Proof on Ray (1.37M LOC, Three Languages)},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/ray-polyglot-capability-proof.html}
+}
+```

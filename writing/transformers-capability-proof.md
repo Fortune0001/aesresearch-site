@@ -142,3 +142,22 @@ The run was also an instrument. Three measurements came back:
 - Every run statistic (findings, confirmations, durations, cost) reconciles against the run's tick-by-tick state log.
 - LOC figures were measured directly against the enumeration clone on 2026-06-02 (`git ls-files` + line counts), not estimated.
 - Before publication, this report's claims about `transformers` internals were re-checked against the public repository and documentation: the model directories cited in patterns #2 and #5 (including `gemma4`, `sam3`, `qwen3_next`, `zamba2`, `d_fine`) exist on the main branch; the modular code-generation mechanism, the `# Copied from` enforcement tooling, FNet's `torch.fft.fftn` implementation, the FNet→Albert and DPR→BERT tokenizer aliasing, the InstructBLIP three-config containment, the TAPAS in-config hyperparameters, and the five Longformer task heads all check out against source. One sub-investigation detail was corrected during that pass: PaliGemma feeds projected image tokens into its decoder's input sequence rather than attaching the vision encoder through cross-attention, so this report describes it by its (verified) contained-config structure.
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *Context-Unbounded Codebase Investigation, Demonstrated on `huggingface/transformers`*. AES Research. https://aesresearch.ai/writing/transformers-capability-proof.html
+
+```bibtex
+@misc{higuera2026transformers,
+  author = {Higuera, Daniel},
+  title = {Context-Unbounded Codebase Investigation, Demonstrated on `huggingface/transformers`},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/transformers-capability-proof.html}
+}
+```

@@ -45,3 +45,22 @@ The expensive, hard-to-scale part of research — faithful structured extraction
 ---
 
 *All figures come directly from the run's per-batch cost and token telemetry, measured on the day of the run.*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *Metered Knowledge Extraction at Scale — Efficiency Metrics from a Composable Research Pipeline*. AES Research. https://aesresearch.ai/writing/research-pipeline-efficiency.html
+
+```bibtex
+@misc{higuera2026metered,
+  author = {Higuera, Daniel},
+  title = {Metered Knowledge Extraction at Scale — Efficiency Metrics from a Composable Research Pipeline},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/research-pipeline-efficiency.html}
+}
+```

@@ -131,3 +131,22 @@ Build organically. Calibrate as you go. Trust the interrupts when they come back
 ---
 
 *Daniel Higuera builds production agentic systems through AES Research. This essay sits beside the calibration spine the rest of the series is built on. Companion pieces: [Calibration, boundary layers, and the distance between yes and no](distance-yes-and-no.html), [Two-tier memory for production agents](two-tier-memory.html), [The context window is a battery](context-window-battery.html), [Attention management](attention-management.html), and [The 6-tier agent maturity model](6-tier-maturity.html).*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *The Membrane, Traffic Cop, and Director stack: how to stop prompt injection without killing your agent pipeline*. AES Research. https://aesresearch.ai/writing/membrane-traffic-cop-director.html
+
+```bibtex
+@misc{higuera2026membrane,
+  author = {Higuera, Daniel},
+  title = {The Membrane, Traffic Cop, and Director stack: how to stop prompt injection without killing your agent pipeline},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/membrane-traffic-cop-director.html}
+}
+```

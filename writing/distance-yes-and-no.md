@@ -107,3 +107,22 @@ That is what calibrated means. Not that nothing goes wrong. That when something 
 ---
 
 *Daniel Higuera builds production agentic systems through AES Research. This essay anchors the vocabulary the rest of the series inherits — calibration, boundary layers, distance between yes and no. Companion pieces: [Two-tier memory for production agents](two-tier-memory.html), [The context window is a battery](context-window-battery.html), and [Attention management](attention-management.html).*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, April 26). *Calibration, boundary layers, and the distance between yes and no: a practitioner's geometry of LLM reliability*. AES Research. https://aesresearch.ai/writing/distance-yes-and-no.html
+
+```bibtex
+@misc{higuera2026calibration,
+  author = {Higuera, Daniel},
+  title = {Calibration, boundary layers, and the distance between yes and no: a practitioner's geometry of LLM reliability},
+  year = {2026},
+  month = {apr},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/distance-yes-and-no.html}
+}
+```

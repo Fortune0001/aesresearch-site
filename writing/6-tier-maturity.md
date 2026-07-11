@@ -155,3 +155,22 @@ The 6-tier model is not a roadmap. It is a measuring stick — and the stick com
 ---
 
 *Daniel Higuera builds production agentic systems through AES Research. The 6-tier model is the spine of the enterprise-deployment work; companion pieces in the **research track** deepen each layer of the discipline it depends on: [Calibration, boundary layers, and the distance between yes and no](distance-yes-and-no.html) (the geometric foundation), [Two-tier memory for production agents](two-tier-memory.html) (the memory architecture tier 6 depends on), [The context window is a battery](context-window-battery.html), and [Attention management](attention-management.html). Director-track and op-ed companion pieces forthcoming.*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, April 26). *The 6-tier agent maturity model: why most enterprise AI is failing on a calibration mismatch, not a tooling gap*. AES Research. https://aesresearch.ai/writing/6-tier-maturity.html
+
+```bibtex
+@misc{higuera2026maturity,
+  author = {Higuera, Daniel},
+  title = {The 6-tier agent maturity model: why most enterprise AI is failing on a calibration mismatch, not a tooling gap},
+  year = {2026},
+  month = {apr},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/6-tier-maturity.html}
+}
+```

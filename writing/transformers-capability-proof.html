@@ -5,8 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Context-Unbounded Codebase Investigation, Demonstrated on `huggingface/transformers` — AES Research</title>
   <meta name="description" content="Technical report — capability demonstration">
+  <link rel="canonical" href="https://aesresearch.ai/writing/transformers-capability-proof.html">
+  <meta name="tdm-reservation" content="1">
+  <meta name="robots" content="noai, noimageai">
   <link rel="stylesheet" href="../style.css">
   <link rel="icon" href="data:,">
+  <meta name="citation_title" content="Context-Unbounded Codebase Investigation, Demonstrated on `huggingface/transformers`">
+  <meta name="citation_author" content="Daniel Higuera">
+  <meta name="citation_publication_date" content="2026/07/04">
+  <meta name="citation_fulltext_html_url" content="https://aesresearch.ai/writing/transformers-capability-proof.html">
+  <meta name="citation_language" content="en">
+  <meta name="citation_publisher" content="AES Research">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "Context-Unbounded Codebase Investigation, Demonstrated on `huggingface/transformers`",
+  "author": {
+    "@type": "Person",
+    "name": "Daniel Higuera"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AES Research",
+    "url": "https://aesresearch.ai/"
+  },
+  "datePublished": "2026-07-04",
+  "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "url": "https://aesresearch.ai/writing/transformers-capability-proof.html",
+  "inLanguage": "en"
+}
+  </script>
 </head>
 <body>
 <div class="page">
@@ -194,10 +223,26 @@
 <li>LOC figures were measured directly against the enumeration clone on 2026-06-02 (<code>git ls-files</code> + line counts), not estimated.</li>
 <li>Before publication, this report&rsquo;s claims about <code>transformers</code> internals were re-checked against the public repository and documentation: the model directories cited in patterns #2 and #5 (including <code>gemma4</code>, <code>sam3</code>, <code>qwen3_next</code>, <code>zamba2</code>, <code>d_fine</code>) exist on the main branch; the modular code-generation mechanism, the <code># Copied from</code> enforcement tooling, FNet&rsquo;s <code>torch.fft.fftn</code> implementation, the FNet→Albert and DPR→BERT tokenizer aliasing, the InstructBLIP three-config containment, the TAPAS in-config hyperparameters, and the five Longformer task heads all check out against source. One sub-investigation detail was corrected during that pass: PaliGemma feeds projected image tokens into its decoder&rsquo;s input sequence rather than attaching the vision encoder through cross-attention, so this report describes it by its (verified) contained-config structure.</li>
 </ul>
+<hr>
+<p><em>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</em></p>
+<h3 id="cite-this-essay">Cite this essay</h3>
+<blockquote>
+<p>Higuera, D. (2026, July 4). <em>Context-Unbounded Codebase Investigation, Demonstrated on <code>huggingface/transformers</code></em>. AES Research. https://aesresearch.ai/writing/transformers-capability-proof.html</p>
+</blockquote>
+<pre><code class="language-bibtex">@misc{higuera2026transformers,
+  author = {Higuera, Daniel},
+  title = {Context-Unbounded Codebase Investigation, Demonstrated on `huggingface/transformers`},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/transformers-capability-proof.html}
+}
+</code></pre>
 <div class="post-footer"><p class="prev-next"><a href="research-pipeline-efficiency.html">&larr; Previous</a> · <a href="two-tier-memory.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
 </main>
 <footer>
 <p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+<p class="footer-legal">Written works licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> &middot; code licensed separately &middot; <a href="../license.html">Licensing &amp; citation</a></p>
 </footer>
 </div>
 </body>

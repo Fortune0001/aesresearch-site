@@ -4,9 +4,38 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC) — AES Research</title>
-  <meta name="description" content="">
+  <meta name="description" content="Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).">
+  <link rel="canonical" href="https://aesresearch.ai/writing/kubernetes-capability-proof.html">
+  <meta name="tdm-reservation" content="1">
+  <meta name="robots" content="noai, noimageai">
   <link rel="stylesheet" href="../style.css">
   <link rel="icon" href="data:,">
+  <meta name="citation_title" content="Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)">
+  <meta name="citation_author" content="Daniel Higuera">
+  <meta name="citation_publication_date" content="2026/07/04">
+  <meta name="citation_fulltext_html_url" content="https://aesresearch.ai/writing/kubernetes-capability-proof.html">
+  <meta name="citation_language" content="en">
+  <meta name="citation_publisher" content="AES Research">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "Context-Unbounded Codebase Investigation \u2014 A Capability Proof on Kubernetes (3.6M LOC)",
+  "author": {
+    "@type": "Person",
+    "name": "Daniel Higuera"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AES Research",
+    "url": "https://aesresearch.ai/"
+  },
+  "datePublished": "2026-07-04",
+  "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "url": "https://aesresearch.ai/writing/kubernetes-capability-proof.html",
+  "inLanguage": "en"
+}
+  </script>
 </head>
 <body>
 <div class="page">
@@ -99,10 +128,26 @@
 <p>The investigation maps its own coverage frontier as it runs. It flagged five areas as the natural next targets: (1) <code>kube-proxy</code> networking data-plane internals, (2) scheduler scoring/filtering plugin algorithms, (3) etcd client interaction patterns (watch multiplexing, leases, compaction), (4) testing / e2e infrastructure, (5) feature-gate propagation from flags through to runtime behavior.</p>
 <h2 id="provenance">Provenance</h2>
 <p>Every figure above is measured, not estimated: scale figures come from a direct count on the clone at the stated commit, and hierarchy, findings, convergence, reliability, and cost figures come from the run&rsquo;s own measurement records and per-fire usage logs. The target commit is publicly resolvable on GitHub, so the scale measurements are independently reproducible.</p>
+<hr>
+<p><em>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</em></p>
+<h3 id="cite-this-essay">Cite this essay</h3>
+<blockquote>
+<p>Higuera, D. (2026, July 4). <em>Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)</em>. AES Research. https://aesresearch.ai/writing/kubernetes-capability-proof.html</p>
+</blockquote>
+<pre><code class="language-bibtex">@misc{higuera2026kubernetes,
+  author = {Higuera, Daniel},
+  title = {Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/kubernetes-capability-proof.html}
+}
+</code></pre>
 <div class="post-footer"><p class="prev-next"><a href="distance-yes-and-no.html">&larr; Previous</a> · <a href="membrane-traffic-cop-director.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
 </main>
 <footer>
 <p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+<p class="footer-legal">Written works licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> &middot; code licensed separately &middot; <a href="../license.html">Licensing &amp; citation</a></p>
 </footer>
 </div>
 </body>

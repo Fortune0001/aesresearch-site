@@ -91,3 +91,22 @@ It is also what lets the system evolve. Capability shifts; tools change; skills 
 *Daniel Higuera — AES Research — 2026*
 
 *Part of a series on agent architecture patterns. See also: [Two-tier memory for production agents](two-tier-memory.html). Upcoming: cross-project director agents, skeptic membranes, and UAT residual-context-gap harnesses.*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, April 26). *Attention management: routing between native LLM capability and augmented skills and tools*. AES Research. https://aesresearch.ai/writing/attention-management.html
+
+```bibtex
+@misc{higuera2026attention,
+  author = {Higuera, Daniel},
+  title = {Attention management: routing between native LLM capability and augmented skills and tools},
+  year = {2026},
+  month = {apr},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/attention-management.html}
+}
+```

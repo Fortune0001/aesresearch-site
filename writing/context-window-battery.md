@@ -85,3 +85,22 @@ This pattern pairs with the two-tier memory architecture: memory files are *what
 *Daniel Higuera — AES Research — 2026*
 
 *Part of a series on agent architecture patterns. See also: [Two-tier memory for production agents](two-tier-memory.html) and [Attention management](attention-management.html). The video version of this material is session 05 of the AI 101 curriculum — contact for access.*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, April 26). *The context window is a battery: surviving compaction on long-running agents*. AES Research. https://aesresearch.ai/writing/context-window-battery.html
+
+```bibtex
+@misc{higuera2026battery,
+  author = {Higuera, Daniel},
+  title = {The context window is a battery: surviving compaction on long-running agents},
+  year = {2026},
+  month = {apr},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/context-window-battery.html}
+}
+```

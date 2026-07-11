@@ -104,3 +104,22 @@ Build the reactive skeptic first. Then make it adversarial. The difference is th
 ---
 
 *Daniel Higuera builds production agentic systems through AES Research. Companion pieces: [Calibration, boundary layers, and the distance between yes and no](distance-yes-and-no.html) (the geometric foundation), [The 6-tier agent maturity model](6-tier-maturity.html) (the maturity ladder the basins formalize), [The Membrane, Traffic Cop, and Director stack](membrane-traffic-cop-director.html) (the perimeter this skeptic works inside), [Two-tier memory for production agents](two-tier-memory.html), and [Attention management](attention-management.html).*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *The adversarial skeptic: calibration that challenges itself*. AES Research. https://aesresearch.ai/writing/adversarial-skeptic.html
+
+```bibtex
+@misc{higuera2026skeptic,
+  author = {Higuera, Daniel},
+  title = {The adversarial skeptic: calibration that challenges itself},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/adversarial-skeptic.html}
+}
+```

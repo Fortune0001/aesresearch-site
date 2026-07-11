@@ -18,6 +18,12 @@ An architectural pattern for agents that need to remember across sessions withou
 
 A practitioner's tier ladder for self-locating an AI initiative — and the diagnostic that names the canonical enterprise failure in three questions. · 18 min · 2026-04-26
 
+## Research
+
+**[When does ML actually help LP dispatch? An honest characterization](when-does-ml-help-lp-dispatch.html)**
+
+A predict-then-correct pipeline for production-cost dispatch, measured until it broke — where the error actually lives, three negative results with nailed mechanisms, and the case that ±1% is a solver result, not a prediction result. · 42 min · 2026-07-11
+
 ## More essays
 
 **[Attention management: routing between native LLM capability and augmented skills and tools](attention-management.html)**

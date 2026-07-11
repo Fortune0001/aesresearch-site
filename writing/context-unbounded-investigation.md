@@ -87,3 +87,22 @@ The three full run reports — per-run metrics, the complete pattern catalogs, f
 ---
 
 *Daniel Higuera builds production agentic systems through AES Research. Companion essays: [Calibration, boundary layers, and the distance between yes and no](distance-yes-and-no.html), [The 6-tier agent maturity model](6-tier-maturity.html), [Two-tier memory for production agents](two-tier-memory.html), [The context window is a battery](context-window-battery.html), and [Attention management](attention-management.html).*
+
+---
+
+*Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+### Cite this essay
+
+> Higuera, D. (2026, July 4). *Context-unbounded codebase investigation: one method, three codebases, three languages*. AES Research. https://aesresearch.ai/writing/context-unbounded-investigation.html
+
+```bibtex
+@misc{higuera2026unbounded,
+  author = {Higuera, Daniel},
+  title = {Context-unbounded codebase investigation: one method, three codebases, three languages},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/context-unbounded-investigation.html}
+}
+```
