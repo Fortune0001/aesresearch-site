@@ -36,11 +36,14 @@ id = "c82fd26550cf4a35bde82d61fa21a28b"
 binding = "WORKER_BUDGET"
 id = "1b74395677b742ff917ac05ec0516db1"
 
-# Outbound email binding for /contact. Must match the Email Routing zone address.
-# Requires Email Routing to be enabled and contact@aesresearch.ai to be a verified address.
+# Outbound email binding for /contact. With no destination_address, the Worker may
+# send to ANY verified Email Routing destination address on the account. The actual
+# recipient is provided at runtime via the CONTACT_TO secret (a verified destination,
+# kept out of this public repo) — see handleContact. A pinned destination_address here
+# must be a *verified destination*, not a routed custom address like contact@ (which
+# throws "send failed").
 [[send_email]]
 name = "SEND_EMAIL"
-destination_address = "contact@aesresearch.ai"
 
 # Per-request analytics (pathname, status, ip prefix, latency). Queryable via Cloudflare SQL API.
 # Pending: the Workers API token needs "Account Analytics: Edit" permission added before this

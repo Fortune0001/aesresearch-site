@@ -451,12 +451,12 @@ async function verifyTurnstile(token, env, ip) {
   }
 }
 
-function buildContactEmail({ name, email, intent, message }) {
+function buildContactEmail({ name, email, intent, message, to }) {
   const subjectSnippet = message.replace(/\s+/g, ' ').slice(0, 60);
   const subject = `[aesresearch:${intent}] ${name} — ${subjectSnippet}`;
   const headers = [
     `From: contact@aesresearch.ai`,
-    `To: contact@aesresearch.ai`,
+    `To: ${to}`,
     `Reply-To: ${name.replace(/[<>]/g, '')} <${email}>`,
     `Subject: ${subject.replace(/[\r\n]/g, ' ')}`,
     `MIME-Version: 1.0`,
@@ -517,12 +517,20 @@ async function handleContact(request, env, origin, ip) {
       status: 503, headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
     });
   }
+  // Cloudflare's send_email binding can only deliver to a *verified* Email Routing
+  // destination address. contact@aesresearch.ai is a routed (custom) address, not a
+  // verified destination, so sending there throws. Deliver to the verified destination
+  // supplied via the CONTACT_TO secret (kept out of the public repo); Reply-To still
+  // carries the sender so replies go to them.
+  const to = (typeof env.CONTACT_TO === 'string' && EMAIL_RE.test(env.CONTACT_TO))
+    ? env.CONTACT_TO
+    : 'contact@aesresearch.ai';
   try {
-    const raw = buildContactEmail({ name, email, intent, message });
+    const raw = buildContactEmail({ name, email, intent, message, to });
     // Cloudflare Email Routing send_email binding requires an EmailMessage object
     // imported from "cloudflare:email". We use dynamic import since this is an ESM Worker.
     const { EmailMessage } = await import('cloudflare:email');
-    const msg = new EmailMessage('contact@aesresearch.ai', 'contact@aesresearch.ai', raw);
+    const msg = new EmailMessage('contact@aesresearch.ai', to, raw);
     await env.SEND_EMAIL.send(msg);
   } catch (e) {
     console.error('send_email failed:', e.message || e);
