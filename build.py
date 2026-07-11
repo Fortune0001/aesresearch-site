@@ -167,6 +167,15 @@ def extract_title_and_description(md: str) -> tuple[str, str]:
         if desc_match:
             desc = desc_match.group(1).strip().strip("*").strip()
             desc = strip_inline_markdown(desc)
+    # Fallback for pages whose lead is raw HTML (e.g. the homepage's
+    # <p class="lede">/<p class="subtitle">) rather than a markdown *italic* line,
+    # so the meta/OG description isn't empty.
+    if not desc:
+        hm = re.search(r'<p class="lede">(.+?)</p>', md, re.DOTALL) \
+            or re.search(r'<p class="subtitle">(.+?)</p>', md, re.DOTALL)
+        if hm:
+            desc = html.unescape(re.sub(r'<[^>]+>', '', hm.group(1)))
+            desc = re.sub(r'\s+', ' ', desc).strip()
     return title, desc
 
 
