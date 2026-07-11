@@ -34,6 +34,7 @@ Four reusable Claude Code skills that encode the patterns from the writing as lo
 
 - **[Ask the Q&A agent &rarr;](ask.html)** — answers grounded in the published essays, with citations.
 - **[Live architecture demo &rarr;](demo/)** — watch the skeptic membrane, two-tier memory lookup, and attention-routing decisions fire in real time alongside the response. Worker source open at [/worker/](worker/).
+- **[Million-row grid demo &rarr;](https://grid.aesresearch.ai/)** — one million rows of structured data, generated and browsed live in your own browser tab: sort any column across the whole set, hold it all in memory, export it. Companion essay: [the browser-scale data layer](writing/million-rows-in-the-browser.html).
 
 ---
 

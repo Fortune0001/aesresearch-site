@@ -59,7 +59,7 @@ Grow the dataset ×10 and the on-demand mode's UI-thread heap doesn't move: the 
 - **It composes.** Resident-active-data and an on-demand backbone aren't competing choices — they compose into one layer that is fast to first paint *and* holds everything when you need it.
 - **It's portable by design.** The storage-adapter contract makes the desktop build an adapter swap, not a rewrite — browser today, desktop next, same data layer.
 
-A live, public demo of this data layer — a million rows you can scroll, sort, and edit in your own browser tab — is in preparation; this page will link it when it ships.
+A live, public demo of this data layer is up at **[grid.aesresearch.ai](https://grid.aesresearch.ai/)** — a million rows you can scroll, sort, and edit in your own browser tab.
 
 ## What's next
 
