@@ -405,7 +405,7 @@ def deploy() -> None:
     # Stage + commit — explicit allowlist only (Review #22 F2). `git add -A`
     # swept unrelated in-flight working-tree files into public deploys.
     allow = [
-        ".gitignore", ".nojekyll", "CNAME",
+        ".gitignore", ".nojekyll", "CNAME", "404.html",
         "build.py", "build_corpus.py", "style.css", "layouts/default.html",
         "index.md", "index.html", "about.md", "about.html",
         "contact.md", "contact.html", "ask.md", "ask.html",

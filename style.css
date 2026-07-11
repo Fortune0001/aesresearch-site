@@ -3,6 +3,7 @@
   --bg: #fafafa;
   --muted: #555;
   --rule: #ddd;
+  --field-border: #8a8a8a;   /* form-input border; 3.3:1 vs --bg for WCAG 1.4.11 (decorative --rule stays hairline) */
   --accent: #1a4a8a;
   --code-bg: #f0f0f0;
   --code-fg: #2a2a2a;
@@ -14,6 +15,7 @@
     --bg: #141414;
     --muted: #a8a8a8;
     --rule: #484848;       /* was #333 — needed 3:1 vs --bg for WCAG 1.4.11 */
+    --field-border: #707070;   /* 3.7:1 vs --bg in dark mode */
     --accent: #7ba9e0;
     --code-bg: #1f1f1f;
     --code-fg: #e0e0e0;
@@ -326,7 +328,7 @@ footer p:last-child {
   font-family: inherit;
   font-size: 1rem;
   padding: 0.75rem 0.7rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
   border-radius: 4px;
   background: var(--bg);
   color: var(--fg);
@@ -517,7 +519,7 @@ textarea:focus-visible {
   font-family: inherit;
   font-size: 1rem;
   padding: 0.6rem 0.7rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
   border-radius: 4px;
   background: var(--bg);
   color: var(--fg);
@@ -592,7 +594,7 @@ textarea:focus-visible {
 .ask-message-agent {
   padding: 1rem 1.25rem;
   border-radius: 6px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
 }
 
 .ask-message-user {
@@ -620,7 +622,7 @@ textarea:focus-visible {
   display: inline-block;
   padding: 0.2rem 0.55rem;
   font-size: 0.85rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
   border-radius: 999px;
   color: var(--muted);
   cursor: help;
@@ -664,7 +666,7 @@ textarea:focus-visible {
 
 .ask-deep-dialog {
   background: var(--bg);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
   border-radius: 6px;
   padding: 1.5rem 1.75rem;
   max-width: 32rem;
@@ -686,7 +688,7 @@ textarea:focus-visible {
   font-family: inherit;
   font-size: 1rem;
   padding: 0.5rem 0.6rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
   border-radius: 4px;
   background: var(--bg);
   color: var(--fg);
@@ -707,7 +709,7 @@ textarea:focus-visible {
   padding: 0.55rem 1.1rem;
   background: transparent;
   color: var(--muted);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--field-border);
   border-radius: 4px;
   cursor: pointer;
 }
