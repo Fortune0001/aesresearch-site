@@ -22,7 +22,7 @@ A practitioner's tier ladder for self-locating an AI initiative — and the diag
 
 **[When does ML actually help LP dispatch? An honest characterization](when-does-ml-help-lp-dispatch.html)**
 
-A predict-then-correct pipeline for production-cost dispatch, measured until it broke — where the error actually lives, three negative results with nailed mechanisms, and the case that ±1% is a solver result, not a prediction result. · 42 min · 2026-07-11
+A predict-then-correct pipeline for production-cost dispatch, measured until it broke — where the error actually lives, three negative results with nailed mechanisms, and the case that ±1% is a solver result, not a prediction result. · 43 min · 2026-07-11
 
 ## More essays
 

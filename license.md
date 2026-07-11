@@ -16,7 +16,7 @@ Each essay carries its own citation block at the end — exact title, publicatio
 
 ## Site & demo source code
 
-The code that runs this site and its interactive demos is licensed [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Noncommercial use — reading, forking, adapting for research or personal projects — is permitted under that license's terms. Commercial licensing is available; [get in touch](contact.html) to discuss terms.
+The code that runs this site and its interactive demos is licensed [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Noncommercial use — reading, forking, adapting for research or personal projects — is permitted under that license's terms. Commercial licensing is available; [get in touch](contact.html) to discuss terms.
 
 One exception: the static site generator (`build.py`) is marked CC0 in the repository README and remains public domain, separate from the rest of the codebase.
 

@@ -1,5 +1,7 @@
 # Context-Unbounded Codebase Investigation — A Capability Proof on Kubernetes (3.6M LOC)
 
+*A hierarchical multi-agent swarm investigated all 2,001 Go packages of Kubernetes — 3.6M lines — and produced one coherent architecture-level synthesis, with no reasoning context ever exceeding a bounded working set.*
+
 **Date:** 2026-06-05 · **Target:** `kubernetes/kubernetes` @ master (`7a1385a3`; full SHA `7a1385a332e503ac051edc39a57e0d84fc5c4e98`) · **Cost:** $0 actual (ran within existing subscription capacity; ~$637 API-equivalent)
 
 ## What this demonstrates

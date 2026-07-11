@@ -166,7 +166,22 @@ def extract_title_and_description(md: str) -> tuple[str, str]:
         desc_match = DESC_RE.search(after_title)
         if desc_match:
             desc = desc_match.group(1).strip().strip("*").strip()
+            desc = strip_inline_markdown(desc)
     return title, desc
+
+
+def strip_inline_markdown(text: str) -> str:
+    """Reduce inline markdown to plain text for use in a meta description.
+
+    Meta descriptions are plain-text attributes; leaving `[label](url)` or `**x**`
+    in them renders literal markdown in search results, social cards, and tab
+    previews. Collapse links to their label and drop emphasis/code markers.
+    """
+    text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text)  # [label](url) -> label
+    text = re.sub(r"`([^`]+)`", r"\1", text)               # `code` -> code
+    text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)          # **bold** -> bold
+    text = re.sub(r"\*([^*]+)\*", r"\1", text)              # *italic* -> italic
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def word_count(md_text: str) -> int:

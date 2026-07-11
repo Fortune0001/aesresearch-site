@@ -57,6 +57,20 @@
     return turn.querySelector('.body');
   }
 
+  // Minimal, XSS-safe markdown for the streamed assistant reply: HTML is escaped
+  // first, then a small set of inline patterns (links, bold, italic, code) plus
+  // paragraph/line breaks. Full markdown is unnecessary — the reply is prose.
+  function minimalMarkdown(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+  }
+
   function appendLayer(layer, decision, detail) {
     clearEmptyStates();
     const li = document.createElement('li');
@@ -128,8 +142,10 @@
             appendLayer(data.layer, data.decision, data.detail);
           } else if (eventName === 'delta') {
             const txt = data.text || '';
-            assistantBody.textContent += txt;
             assistantText += txt;
+            // Re-render the whole reply each delta so streamed markdown (links,
+            // bold, code) resolves instead of showing raw syntax.
+            assistantBody.innerHTML = '<p>' + minimalMarkdown(assistantText) + '</p>';
             convo.scrollTop = convo.scrollHeight;
           } else if (eventName === 'error') {
             appendStreamError(data.message || 'unknown error');

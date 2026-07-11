@@ -1,5 +1,7 @@
 # Context-Unbounded Codebase Investigation — Polyglot Capability Proof on Ray (1.37M LOC, Three Languages)
 
+*The same investigation architecture on 1.37M lines across C++, Python, and Java — stitching findings across the language boundary in a single run.*
+
 **Date:** 2026-06-05 · **Target:** [`ray-project/ray`](https://github.com/ray-project/ray) @ master [`0b82e9d`](https://github.com/ray-project/ray/commit/0b82e9d) · **Cost:** ≈ $123 API-equivalent ($0 marginal — the run drew on an existing subscription allocation)
 
 ## What this demonstrates
