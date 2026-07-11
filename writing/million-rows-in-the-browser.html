@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Million-row datasets, in the browser, instantly usable — AES Research</title>
+  <meta name="description" content="How we made large-dataset editing GUIs viable on the web — no desktop install, no per-page waiting.">
+  <link rel="canonical" href="https://aesresearch.ai/writing/million-rows-in-the-browser.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="AES Research">
+  <meta property="og:title" content="Million-row datasets, in the browser, instantly usable — AES Research">
+  <meta property="og:description" content="How we made large-dataset editing GUIs viable on the web — no desktop install, no per-page waiting.">
+  <meta property="og:url" content="https://aesresearch.ai/writing/million-rows-in-the-browser.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Million-row datasets, in the browser, instantly usable — AES Research">
+  <meta name="twitter:description" content="How we made large-dataset editing GUIs viable on the web — no desktop install, no per-page waiting.">
+  <meta name="tdm-reservation" content="1">
+  <meta name="robots" content="noai, noimageai">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a4a8a'/><text x='16' y='23' font-family='Georgia,serif' font-size='21' font-weight='700' fill='%23ffffff' text-anchor='middle'>A</text></svg>">
+  <meta name="citation_title" content="Million-row datasets, in the browser, instantly usable">
+  <meta name="citation_author" content="Daniel Higuera">
+  <meta name="citation_publication_date" content="2026/07/11">
+  <meta name="citation_fulltext_html_url" content="https://aesresearch.ai/writing/million-rows-in-the-browser.html">
+  <meta name="citation_language" content="en">
+  <meta name="citation_publisher" content="AES Research">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "Million-row datasets, in the browser, instantly usable",
+  "author": {
+    "@type": "Person",
+    "name": "Daniel Higuera"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AES Research",
+    "url": "https://aesresearch.ai/"
+  },
+  "datePublished": "2026-07-11",
+  "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "url": "https://aesresearch.ai/writing/million-rows-in-the-browser.html",
+  "inLanguage": "en"
+}
+  </script>
+</head>
+<body>
+<div class="page">
+<nav class="nav" aria-label="Breadcrumb"><a href="../index.html">&larr; AES Research</a> <span class="sep">/</span> <a href="index.html">Writing</a></nav>
+<main>
+<h1 id="million-row-datasets-in-the-browser-instantly-usable">Million-row datasets, in the browser, instantly usable</h1>
+<p class="article-meta">Published 2026-07-11 · 7 min read</p>
+<p><em>How we made large-dataset editing GUIs viable on the web — no desktop install, no per-page waiting.</em></p>
+<p><strong>Date:</strong> 2026-07-11 · <strong>Basis:</strong> measured, production builds — renderer and evidence class stated inline · <strong>Infrastructure cost:</strong> $0 — the data layer runs entirely client-side</p>
+<h2 id="the-problem">The problem</h2>
+<p>Agentic AI tools increasingly need to <em>show and edit</em> large structured datasets — power-system models, financial ledgers, scientific tables — with hundreds of thousands to millions of rows and tens to hundreds of columns. The conventional wisdom is that this forces a heavyweight desktop application: the browser &ldquo;can&rsquo;t handle it.&rdquo;</p>
+<p>It mostly can&rsquo;t — <em>if you build it the obvious way.</em> A normalized database behind an API that recompiles the view on every page render produces a GUI that is unusable at scale. In a production deployment of that pattern we observed firsthand, editing a ~100k-row table meant <strong>a minute or more of wait per page</strong>, climbing to <strong>tens of minutes by ~500k rows</strong> — re-computed on every interaction, every time. That experience is what convinces teams the web is a dead end for big data.</p>
+<p>It isn&rsquo;t. The <em>architecture</em> is the dead end.</p>
+<h2 id="what-we-built">What we built</h2>
+<p>A <strong>client-side data layer</strong> for large-dataset web GUIs. The shape, at the architecture level:</p>
+<ul>
+<li>Interaction is <strong>instant end-to-end</strong> — scroll, select, and move anywhere in the dataset with no per-page loading; a full-table export runs as a single fast operation, not a paged crawl.</li>
+<li>The full dataset is backed by a <strong>durable client-side cache</strong>, so any view is served on demand without a round trip.</li>
+<li><strong>Sorting and filtering stay smooth at scale</strong> — served by the data layer, off the UI thread, where naive in-page data paths fall over.</li>
+</ul>
+<p>Two complementary modes compose into one layer: a <strong>resident mode</strong> that holds the active table in memory for instant whole-dataset interaction, and an <strong>on-demand mode</strong> that serves views out of the durable cache with a near-constant UI memory footprint. Each covers the region where the other thins out. And the data layer is built around a storage-adapter contract, so a browser, a browser with persistent local storage, and a desktop shell are adapter swaps rather than rewrites — the web build isn&rsquo;t a compromise, it&rsquo;s the default.</p>
+<h2 id="results-measured-production-builds">Results (measured, production builds)</h2>
+<p>Time from clicking a tab to the <strong>whole dataset being usable</strong> — scrollable to the last row, selectable, exportable:</p>
+<table>
+<thead>
+<tr>
+<th>dataset</th>
+<th>naive production stack</th>
+<th>our data layer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~100k rows</td>
+<td><strong>minutes per page</strong></td>
+<td><strong>~0.2 seconds</strong></td>
+</tr>
+<tr>
+<td>~500k rows</td>
+<td><strong>tens of minutes</strong></td>
+<td><strong>well under a second</strong></td>
+</tr>
+<tr>
+<td>1,000,000 rows</td>
+<td>(effectively unusable)</td>
+<td><strong>0.9–2.1 seconds</strong></td>
+</tr>
+<tr>
+<td>1,000,000 rows × <strong>108 columns</strong> (very wide)</td>
+<td>—</td>
+<td><strong>~2.8 seconds</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>[Evidence class: resident mode on a 21-column table, measured on two renderers. A desktop-shell (embedded-Chromium) build sweeps linearly from 0.11 s at 100k to 0.89 s at 1M; standalone Chrome read 0.24 s at 100k and 2.14 s at 1M. The table quotes values covering both: ~0.2 s at 100k, 0.9–2.1 s at 1M. The 1M×108 figure (~2.8 s) is the desktop-shell build, uncorroborated at that width. 20–30% run-to-run variance is normal at this scale. The naive-stack column is banded from a real deployment; see Provenance.]</strong></p>
+<p>Two more results that matter for real tools:</p>
+<ul>
+<li><strong>First screen in ~15 milliseconds.</strong> The on-demand mode serves the first visible window in ~9–23 ms regardless of dataset size <em>or width</em>, so the UI is responsive immediately. <strong>[measured across all sizes at both 21 and 108 columns]</strong></li>
+<li><strong>Many large tables open at once.</strong> A realistic multi-table workload — several large tables plus many smaller ones — stays <strong>comfortably within a single browser tab&rsquo;s memory budget, with room to spare</strong>. <strong>[measured; exact sizes deliberately banded]</strong> The dataset sizes that supposedly force a desktop app fit on the web.</li>
+</ul>
+<h3 id="the-scaling-picture">The scaling picture</h3>
+<p><img src="assets/million-rows-in-the-browser.svg" alt="Chart: from 100k to 1M rows, data on disk rises linearly to about 123 MB while the UI thread's JS heap stays flat near 25 MB." style="width:100%;max-width:720px;height:auto;"></p>
+<p>Grow the dataset ×10 and the on-demand mode&rsquo;s UI-thread heap doesn&rsquo;t move: the data lives in the durable cache, and the UI only ever holds the window you&rsquo;re looking at. <strong>[Disk measured clean at 100k and 1M with linearity confirmed between them; steady-state heap measured at 1M; spot-measurements from separate sessions at 1k–100k sit in the same ~13–29 MB band. The flat line is the UI thread&rsquo;s heap — the whole tab sits near ~227 MB at 1M while browsing.]</strong></p>
+<h2 id="honest-boundaries">Honest boundaries</h2>
+<ul>
+<li><strong>The numbers are workstation-anchored.</strong> Everything above was measured on a high-end workstation-class machine. Browser runtime environment matters as much as hardware: we measured the same cache-fill operation ~50× slower under a constrained headless preview runtime. The architecture holds on modest machines; the specific milliseconds don&rsquo;t travel — which is exactly what the forthcoming live demo is for: measure it on your own hardware.</li>
+<li><strong>The two modes trade differently — we don&rsquo;t blur them.</strong> The headline table is the resident mode: fastest to whole-dataset-usable, but its memory grows with the data (roughly half a GB at 1M×21 columns, ~1.7 GB at 1M×108), it meets the browser&rsquo;s per-tab memory wall at a few million rows, and its in-memory sort is the conventional kind — fine at moderate scale, but it&rsquo;s the data-layer-routed path that stays smooth past it. The flat ~25 MB line is the on-demand mode: near-constant UI memory at any scale, in exchange for a one-time cache fill (~15 s at 1M rows on our box — it runs in the background behind the resident paint when the modes are composed; only a cold, on-demand-only first load makes you wait on it) and a first-sort cost on a fresh column (~1.6 s at 1M; repeats are ~10 ms).</li>
+<li><strong>Extreme width flips the winner.</strong> At 1M rows × 108 columns the resident mode is the one that carries the load; the on-demand mode&rsquo;s full-width bulk ingest is what gives out first at that width. The composition is the point — each mode covers the region where the other thins out.</li>
+<li><strong>Run-to-run variance is real.</strong> 20–30% between identical runs is normal at this scale, and one renderer family ran the 1M operation ~2.4× slower than another. We publish the clean canonical runs and say so.</li>
+</ul>
+<h2 id="why-it-matters">Why it matters</h2>
+<ul>
+<li><strong>No install.</strong> The capability that used to require a desktop application now runs in a tab — which is exactly what agentic AI tools need: zero-friction, shareable, sandboxed.</li>
+<li><strong>It composes.</strong> Resident-active-data and an on-demand backbone aren&rsquo;t competing choices — they compose into one layer that is fast to first paint <em>and</em> holds everything when you need it.</li>
+<li><strong>It&rsquo;s portable by design.</strong> The storage-adapter contract makes the desktop build an adapter swap, not a rewrite — browser today, desktop next, same data layer.</li>
+</ul>
+<p>A live, public demo of this data layer — a million rows you can scroll, sort, and edit in your own browser tab — is in preparation; this page will link it when it ships.</p>
+<h2 id="whats-next">What&rsquo;s next</h2>
+<p>The GUI and data layer are the substrate. The companion track replaces the heavy optimization engine behind these models with a learned <strong>machine-learning surrogate</strong> — keeping the data layer and the compute engine cleanly separated so the swap is a drop-in. That work is now published: <a href="when-does-ml-help-lp-dispatch.html">When does ML actually help LP dispatch?</a></p>
+<h2 id="provenance">Provenance</h2>
+<p>Every number above traces to a measured artifact from two benchmark rounds (2026-06-24 and 2026-06-25) run in real browsers against production builds, plus a clean re-test that superseded two earlier figures — the superseded values are not used here. The headline table is a single clean sweep on one renderer, corroborated (with the stated spread) on a second; the scaling figure&rsquo;s disk line is measured at both endpoints with linearity confirmed; the multi-table result is a single measured configuration, banded deliberately. The naive-baseline column is a firsthand observation of a real third-party production deployment of the normalized-DB→API→GUI pattern, reported as bands and unattributed by design. The dataset is a synthetic power-system network table generated against an open schema — no proprietary data anywhere in the pipeline.</p>
+<hr>
+<p><em>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</em></p>
+<h3 id="cite-this-essay">Cite this essay</h3>
+<blockquote>
+<p>Higuera, D. (2026, July 11). <em>Million-row datasets, in the browser, instantly usable</em>. AES Research. https://aesresearch.ai/writing/million-rows-in-the-browser.html</p>
+</blockquote>
+<pre><code class="language-bibtex">@misc{higuera2026millionrows,
+  author = {Higuera, Daniel},
+  title = {Million-row datasets, in the browser, instantly usable},
+  year = {2026},
+  month = {jul},
+  publisher = {AES Research},
+  url = {https://aesresearch.ai/writing/million-rows-in-the-browser.html}
+}
+</code></pre>
+<div class="post-footer"><p class="prev-next"><a href="membrane-traffic-cop-director.html">&larr; Previous</a> · <a href="ray-polyglot-capability-proof.html">Next &rarr;</a></p><p class="wayfinding">AES Research is a public lab for agent-system patterns from production. <a href="index.html">More writing &rarr;</a></p></div>
+</main>
+<footer>
+<p>AES Research &middot; Applied Emergent Sciences &middot; Houston &middot; 2026</p>
+<p class="footer-legal">Written works licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> &middot; code licensed separately &middot; <a href="../license.html">Licensing &amp; citation</a></p>
+</footer>
+</div>
+</body>
+</html>

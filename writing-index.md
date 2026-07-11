@@ -44,6 +44,10 @@ The wrong answer that looks right is the expensive one — and the skeptic that 
 
 ## Capability proofs
 
+**[Million-row datasets, in the browser, instantly usable](million-rows-in-the-browser.html)**
+
+The browser "can't handle" a million-row editable grid — measured proof that it's the naive architecture that can't: a million rows usable in a second or two, UI memory flat, no install. · 7 min · 2026-07-11
+
 **[Context-unbounded codebase investigation: one method, three codebases, three languages](context-unbounded-investigation.html)**
 
 transformers, Kubernetes, and Ray — ~6.9M lines across four languages — investigated with no reasoning context ever holding more than a bounded working set. · 8 min · 2026-07-04

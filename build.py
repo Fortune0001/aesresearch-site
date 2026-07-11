@@ -416,6 +416,7 @@ def deploy() -> None:
     ]
     allow += [f"writing/{p.name}" for p in sorted((SITE / "writing").glob("*.md"))]
     allow += [f"writing/{p.name}" for p in sorted((SITE / "writing").glob("*.html"))]
+    allow += [f"writing/assets/{p.name}" for p in sorted((SITE / "writing" / "assets").glob("*.svg"))]
     run("git", "add", "--", *[p for p in dict.fromkeys(allow) if (SITE / p).exists()])
     diff = run("git", "diff", "--staged", "--quiet", check=False)
     if diff.returncode == 0:

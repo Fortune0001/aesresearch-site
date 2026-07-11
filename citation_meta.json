@@ -11,5 +11,6 @@
   "kubernetes-capability-proof": {"date": "2026-07-04"},
   "ray-polyglot-capability-proof": {"date": "2026-07-04"},
   "research-pipeline-efficiency": {"date": "2026-07-04"},
-  "when-does-ml-help-lp-dispatch": {"date": "2026-07-11"}
+  "when-does-ml-help-lp-dispatch": {"date": "2026-07-11"},
+  "million-rows-in-the-browser": {"date": "2026-07-11"}
 }
