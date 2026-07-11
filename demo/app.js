@@ -63,7 +63,13 @@
   function minimalMarkdown(text) {
     return text
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
+      // [label](url) → link. Allow http(s), mailto, and site-relative/anchor URLs;
+      // any other scheme (javascript:, data:, …) falls back to the plain label.
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, label, url) {
+        return /^(https?:\/\/|mailto:|[/#]|\.{1,2}\/)/i.test(url)
+          ? '<a href="' + url + '" rel="noopener">' + label + '</a>'
+          : label;
+      })
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
       .replace(/`([^`]+)`/g, '<code>$1</code>')
