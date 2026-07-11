@@ -37,10 +37,6 @@
 
 @media (prefers-color-scheme: dark) {
   .disclaimer { background: rgba(123, 169, 224, 0.06); }
-  /* Dark-mode accent is light blue; white button text fails WCAG AA (2.44:1).
-     Use the dark page bg as the label color instead (7.5:1). Mirrors the
-     site-wide .contact-form/.ask-submit dark-mode patch. */
-  #send-btn { color: var(--bg); }
 }
 
 .sr-only {
@@ -225,6 +221,10 @@
   .stream-log .layer-memory { color: #22d3ee; }
   .stream-log .layer-attention { color: #a78bfa; }
   .stream-log .layer-error { color: #fca5a5; }
+  /* Dark-mode accent is light blue; white button text fails WCAG AA (2.44:1).
+     Override the base #send-btn white to the dark page bg (7.5:1). Placed after
+     the base #send-btn rule so equal-specificity source order wins. */
+  #send-btn { color: var(--bg); }
 }
 
 .stream-log .detail {
