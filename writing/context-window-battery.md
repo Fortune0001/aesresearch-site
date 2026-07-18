@@ -26,7 +26,7 @@ The failure mode is predictable. You spend an hour calibrating the agent to your
 
 The fix is to write your calibration out of the volatile context window and into persistent files before compaction hits. Every calibrated procedure, every skeptic rubric, every boundary-layer configuration, every convention that works — all of it goes to disk while it's still fresh in context.
 
-Use the word *atomic* deliberately. Atomic writes mean you write to a temporary file first, then move that temp file to the permanent location. Term of the trade in file systems and databases. The reason it matters: if compaction fires while the agent is mid-write on a memory file, you can end up with a half-written file that's worse than no file at all. Temp file first, commit second. Always.
+Use the word *atomic* deliberately. Atomic writes mean you write to a temporary file first, then move that temp file to the permanent location. Term of the trade in file systems; databases get the same guarantee a different way, through write-ahead logging. The reason it matters: if compaction fires while the agent is mid-write on a memory file, you can end up with a half-written file that's worse than no file at all. Temp file first, commit second. Always.
 
 I've tested this. I've had agents corrupt their own memory files because they were doing a direct write when compaction fired. The agent comes back after compaction, tries to read its memory, and the file is garbage. Now you've lost both the context window content *and* the persistent memory. You're starting from scratch. Atomic writes exist specifically to make this failure mode impossible — the permanent file is never in a partial state.
 

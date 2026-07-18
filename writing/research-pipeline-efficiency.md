@@ -34,7 +34,7 @@ Unit economics: **~$0.22 per fully-structured expert-video extraction, $0 actual
 
 ## The finding: the ceiling is throughput, not cost or context
 
-The batch stopped not because it ran out of budget and not because any context window filled — it stopped because it hit the **platform's 5-hour rolling rate limit** after ~244 calls. At $0.22/video the *budget* wall is hundreds of videos away; the *context* wall never appears (each extraction is independent and bounded); the wall you actually hit is **rate**.
+The batch stopped not because it ran out of budget and not because any context window filled — it stopped because it hit the **platform's 5-hour session usage limit** after ~244 calls. At $0.22/video the *budget* wall is hundreds of videos away; the *context* wall never appears (each extraction is independent and bounded); the wall you actually hit is **rate**.
 
 That reframes scaling. The lever isn't a bigger context window or a cheaper model — it's **pacing the same composable pipeline across rate windows** (lower concurrency + spread over time, or schedule across windows). The architecture is already context-unbounded and cost-trivial; the remaining engineering is throughput choreography, which is a scheduling problem, not a model problem.
 

@@ -42,7 +42,7 @@ When the skeptic dispatches research and the research comes back, the evidence a
 
 The consequence is structural, not procedural. Expert-looking signals cannot count as evidence until something grounds them — a verify agent that takes the citation to the actual source, checks the mechanism against the documentation, runs the counterfactual against the data. Only grounded signals enter the skeptic's ledger. Everything else is texture.
 
-This composition is not optional, and here is the sentence from my own design notes that I keep returning to: **without the verify agent, the gap detector itself becomes a Dunning-Kruger system.** The auditor develops the same pathology it audits. It accumulates confident, citation-shaped, mechanism-flavored justifications for its own verdicts, agrees with itself, and reports health. A skeptic without grounding doesn't reduce window dressing. It industrializes it.
+This composition is not optional, and here is the sentence from my own design notes that I keep returning to: **without the verify agent, the gap detector itself becomes a Dunning-Kruger system — the same deficit that produces the error also hides it from the auditor.** The auditor develops the same pathology it audits. It accumulates confident, citation-shaped, mechanism-flavored justifications for its own verdicts, agrees with itself, and reports health. A skeptic without grounding doesn't reduce window dressing. It industrializes it.
 
 ---
 

@@ -15,7 +15,7 @@ The target was deliberately **non-AI** — a distributed-systems codebase in Go 
 | Metric | Value |
 |---|---|
 | Repo / commit | `kubernetes/kubernetes` @ master `7a1385a3` |
-| Scale (measured) | **3,598,801 Go LOC** excl. vendor (2.88M hand-written); 12,764 files; 3,082 packages |
+| Scale (measured) | **3,598,801 Go LOC** excl. vendor; 12,764 files; 3,082 packages |
 | Targets investigated | **2,001** substantial core packages (≥100 LOC) |
 | Hierarchy | **67 sub-investigations → 12 mid-coordinators → 1 master** (3-level) |
 | Findings | **6,329** raw · **494 confirmed** hypotheses · 12 refuted · 0 left open |
@@ -29,13 +29,13 @@ The target was deliberately **non-AI** — a distributed-systems codebase in Go 
 
 The master synthesis (12,056 characters, complete) surfaced seven cross-cluster patterns **no single sub-investigation could see** — each requires stitching findings across clusters:
 
-1. **Four-Stage Universal Pipeline — Define → Generate → Cache → Reconcile.** Every API resource traverses the same four stages; the ~2,000 packages are combinatorial expansion (API groups × versions × generated layers), not 2,000 independent designs.
-2. **Fractal Reconciliation.** The watch→enqueue→reconcile→requeue loop recurs at five scales (primitive, manager, controller, component, bootstrap) — understanding one controller is architecturally equivalent to understanding all.
-3. **Interface-Segregated Chain Composition.** Narrow Go interfaces composed into ordered chains is the universal wiring idiom (auth, admission, storage, HTTP, volumes, streaming); Kubernetes replaces inheritance and plugin SDKs with one composition strategy.
-4. **Code Generation as Architectural Governance.** ~8 generator templates — not the ~2,000 packages — are the "real" codebase; cross-group drift is structurally impossible because every group passes the same template pipeline.
-5. **Generic-Store + Strategy as the API Surface Atom.** Every resource = `genericregistry.Store` + a type-specific `Strategy`; CRDs are projections of the same architecture, sharing identical persistence/admission/serialization/watch semantics with built-in resources.
+1. **Four-Stage Pipeline — Define → Generate → Cache → Reconcile.** Nearly every controller-managed resource traverses the same four stages (imperative review APIs like TokenReview and SubjectAccessReview skip the cache and reconcile stages); the ~2,000 packages are combinatorial expansion (API groups × versions × generated layers), not 2,000 independent designs.
+2. **Fractal Reconciliation.** The watch→enqueue→reconcile→requeue loop recurs at five scales (kube-proxy's rate-gated BoundedFrequencyRunner, kubelet's per-domain sub-managers, kube-controller-manager's ~50 controllers, the scheduler's backoff/requeue queue, and kubeadm's phase-based bootstrap — the last an idempotent-convergence analog rather than a literal watch loop) — understanding one controller is architecturally equivalent to understanding all.
+3. **Interface-Segregated Chain Composition.** Narrow Go interfaces composed into ordered chains is the universal wiring idiom (auth, admission, storage, HTTP, streaming); Kubernetes replaces inheritance and plugin SDKs with one composition strategy.
+4. **Code Generation as Architectural Governance.** ~11 generator templates — not the ~2,000 packages — are the "real" codebase; cross-group drift is structurally impossible because every group passes the same template pipeline.
+5. **Generic-Store + Strategy as the API Surface Atom.** Every resource = `genericregistry.Store` + a type-specific `Strategy`; CRDs are projections of the same architecture, sharing identical persistence/serialization/watch semantics with built-in resources, and passing through the same generic admission chain upstream of the store.
 6. **Hub-and-Spoke API Versioning.** Internal "hub" types + generated conversions decouple storage from wire format; API compatibility is an *emergent consequence of codegen + hub types*, not a code-review policy.
-7. **Phased Component Bootstrap with DI.** Every binary boots through a phased, idempotent, dependency-ordered sequence that is itself reconciliation-shaped — closing the fractal loop.
+7. **Phased Component Bootstrap with DI.** Every binary boots through a phased, dependency-ordered sequence — a run-once analog of the reconcile pattern used elsewhere, converging at startup rather than watching continuously.
 
 > *"Kubernetes is a declarative, level-triggered reconciliation engine whose ~2,000-package codebase is not 2,000 independent designs but a single architectural cell — versioned types → generated clients → informer caches → reconcile loops — stamped out by code generators and composed through narrow Go interfaces."* — master synthesis, converged across all 12 mid-coordinators with zero dissent.
 

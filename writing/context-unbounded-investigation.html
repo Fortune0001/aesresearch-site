@@ -78,14 +78,14 @@
 <td>2</td>
 <td><code>kubernetes/kubernetes</code></td>
 <td>Go</td>
-<td>3.6M LOC; 2,001 packages investigated</td>
+<td>3.6M-LOC repo; ~2.38M LOC investigated across 2,001 packages</td>
 <td>Generalizes across domain — non-AI, distributed-systems, a different language</td>
 </tr>
 <tr>
 <td>3</td>
 <td><code>ray-project/ray</code></td>
 <td>C++ / Python / Java</td>
-<td>1.37M LOC; 442 core directories</td>
+<td>1.37M-line repo; 780K analyzed across 442 core directories</td>
 <td>Generalizes across <em>languages in a single run</em> — synthesis that stitches findings across the language boundary</td>
 </tr>
 </tbody>
@@ -110,8 +110,8 @@
 <hr>
 <h2 id="what-the-investigations-found">What the investigations found</h2>
 <p>Each run produced an architecture-level account of its target that converged across independent, mutually-blind sub-investigations. The convergence is itself the epistemic result: sub-investigations that never saw each other&rsquo;s work arriving at the same structural account means the patterns belong to the system under study, not to any one analysis.</p>
-<p><strong>Transformers</strong> resolved into a registry-driven, configuration-first federation: ~450 self-contained model packages held coherent not by deep inheritance but by a small set of contracts — the configuration object as the true public API, a backbone-plus-task-head seam as the universal composability point, containment (not inheritance) for multimodal composition, and a quiet architectural fact with a future: the contract does not privilege attention, which is why FFT cores, state-space models, and linear-recurrence models already live in the library without breaking it. Six cross-cluster patterns, all 15 subs blind to one another; 117 confirmed hypotheses, 1 refuted.</p>
-<p><strong>Kubernetes</strong> resolved into a single architectural cell stamped out at scale: every API resource traverses the same define → generate → cache → reconcile pipeline, the watch-reconcile loop recurs fractally at five scales, and ~8 code-generator templates — not the ~2,000 packages — are the real codebase. All 12 mid-syntheses converged on that account with zero dissent; 494 confirmed hypotheses, 12 refuted, 0 left open.</p>
+<p><strong>Transformers</strong> resolved into a registry-driven, configuration-first federation: ~450 self-contained model packages held coherent not by deep inheritance but by a small set of contracts — the configuration object as the architectural spine beneath the public API, a backbone-plus-task-head seam as the universal composability point, containment (not inheritance) for multimodal composition, and a quiet architectural fact with a future: the contract does not privilege attention, which is why FFT cores, state-space models, and linear-recurrence models already live in the library without breaking it. Six cross-cluster patterns, all 15 subs blind to one another; 117 confirmed hypotheses, 1 refuted.</p>
+<p><strong>Kubernetes</strong> resolved into a single architectural cell stamped out at scale: nearly every controller-managed resource traverses the same define → generate → cache → reconcile pipeline (a handful of review-style APIs like TokenReview are the exception), the watch-reconcile loop recurs across several layers, and ~11 code-generator templates — not the ~2,000 packages — are the real codebase. All 12 mid-syntheses converged on that account with zero dissent; 494 confirmed hypotheses, 12 refuted, 0 left open.</p>
 <p><strong>Ray</strong> produced the finding the series exists to demonstrate — a claim that requires holding three languages in one investigation: <em>all</em> distributed computation in Ray, across seven-plus domain libraries in three languages, funnels losslessly through exactly three C++ kernel primitives (task, actor, ObjectRef), with type erasure at the wire boundary as the actual cross-language contract. No single-language pass can even state that claim, because the evidence for it lives on both sides of the language boundary at once. Three mid-syntheses, zero dissent, near-identical vocabulary; 159 confirmed, 11 refuted.</p>
 <p>Each run also emitted its own coverage frontier — the ranked list of what a next bounded run should investigate. The refuted-hypothesis counts (1, 12, 11) are worth reading as what they are: the investigations generate falsifiable hypotheses and then kill the ones that fail confirmation, which is the property that separates investigation from summarization.</p>
 <hr>
