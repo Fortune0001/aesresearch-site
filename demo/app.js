@@ -62,7 +62,14 @@
   // paragraph/line breaks. Full markdown is unnecessary — the reply is prose.
   function minimalMarkdown(text) {
     return text
+      // Quotes are escaped here, with the angle brackets, because `url` below is
+      // concatenated into an href="..." attribute. Without this a '"' in a
+      // destination closes the attribute and everything after it becomes further
+      // attributes — including event handlers. The Worker's egress sanitizer is the
+      // control that stops attacker bytes reaching this function at all; this escape
+      // is the second, renderer-side reason the same payload cannot execute.
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
       // [label](url) → link, but only to this site (root-relative, anchor,
       // dot-relative, or aesresearch.ai) or mailto:. Agent output can hallucinate
       // URLs, so any other target — external domains, protocol-relative //host,
