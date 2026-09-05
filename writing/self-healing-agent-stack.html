@@ -1,0 +1,199 @@
+<title>A self-healing agent stack, recorded — AES Research</title>
+<style>
+  :root{
+    --paper:#F6F7F9;--ground:#EDEFF3;--ink:#1A1F2B;--ink-soft:#5B6472;
+    --accent:#2C4A6E;--rule:#DCE0E6;--card:#FFFFFF;--card-edge:#E6E9EE;
+    --r-overseer:#4A4E8C;--r-architect:#2C4A6E;--r-cop:#9A6A1E;--r-director:#2E7D8A;
+    --r-dev:#6A579C;--r-research:#557A3A;--r-verify:#556070;--fail:#B5432E;--pass:#2F7A4F;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono","Roboto Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --paper:#11141B;--ground:#0C0F15;--ink:#E6E9EF;--ink-soft:#98A2B3;--accent:#86ACD8;
+    --rule:#242A35;--card:#171B24;--card-edge:#262C38;
+    --r-overseer:#9296D8;--r-architect:#86ACD8;--r-cop:#D2A24E;--r-director:#5FB6C4;
+    --r-dev:#9E8FCB;--r-research:#8FB56A;--r-verify:#8892A0;--fail:#E0715A;--pass:#5FB07E;}}
+  :root[data-theme="light"]{--paper:#F6F7F9;--ground:#EDEFF3;--ink:#1A1F2B;--ink-soft:#5B6472;--accent:#2C4A6E;--rule:#DCE0E6;--card:#FFFFFF;--card-edge:#E6E9EE;--r-overseer:#4A4E8C;--r-architect:#2C4A6E;--r-cop:#9A6A1E;--r-director:#2E7D8A;--r-dev:#6A579C;--r-research:#557A3A;--r-verify:#556070;--fail:#B5432E;--pass:#2F7A4F;}
+  :root[data-theme="dark"]{--paper:#11141B;--ground:#0C0F15;--ink:#E6E9EF;--ink-soft:#98A2B3;--accent:#86ACD8;--rule:#242A35;--card:#171B24;--card-edge:#262C38;--r-overseer:#9296D8;--r-architect:#86ACD8;--r-cop:#D2A24E;--r-director:#5FB6C4;--r-dev:#9E8FCB;--r-research:#8FB56A;--r-verify:#8892A0;--fail:#E0715A;--pass:#5FB07E;}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.6;font-size:1.04rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:58rem;margin:0 auto;padding:clamp(1.4rem,4vw,3.5rem) clamp(1.1rem,4vw,2rem) 4rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+  .eyebrow .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-soft)}
+  h1{font-weight:600;font-size:clamp(1.8rem,4.6vw,2.5rem);line-height:1.12;letter-spacing:-.01em;margin:0 0 .8rem;text-wrap:balance}
+  .dek{font-size:clamp(1.05rem,2.3vw,1.2rem);color:var(--ink-soft);font-style:italic;margin:0 0 1.6rem;max-width:44rem}
+  h2{font-family:var(--mono);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft);margin:2.6rem 0 1.1rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(6.2rem,1fr));gap:.6rem;margin:1.4rem 0 .5rem;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:1.05rem 0}
+  .stat{display:flex;flex-direction:column;gap:.25rem}
+  .stat .v{font-family:var(--mono);font-weight:700;font-size:1.3rem;color:var(--ink);line-height:1}
+  .stat .v.green{color:var(--pass)}
+  .stat .k{font-family:var(--mono);font-size:.56rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);line-height:1.3}
+
+  /* escalation ladder */
+  .ladder{display:flex;flex-direction:column;gap:.5rem;margin:.4rem 0 1rem;position:relative;padding-left:2.2rem}
+  .ladder::before{content:"context / cost ↑";position:absolute;left:0;top:0;bottom:0;writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center}
+  .rung{display:grid;grid-template-columns:9.5rem 1fr;gap:.9rem;align-items:center;background:var(--card);border:1px solid var(--card-edge);border-left:4px solid var(--role);border-radius:8px;padding:.55rem .8rem}
+  .rung .who{display:flex;flex-direction:column;gap:.15rem}
+  .rung .rc{font-family:var(--mono);font-size:.74rem;font-weight:700;color:var(--role)}
+  .rung .fires{font-family:var(--mono);font-size:.54rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+  .rung .desc{font-size:.9rem;color:var(--ink-soft);line-height:1.4}
+  .rung.overseer{--role:var(--r-overseer)} .rung.architect{--role:var(--r-architect)} .rung.cop{--role:var(--r-cop)}
+  .rung.director{--role:var(--r-director)} .rung.exec{--role:var(--r-verify)}
+  .rung.exec .rc{color:var(--ink)}
+
+  /* task 1 compact strip */
+  .strip{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;background:var(--ground);border:1px solid var(--card-edge);border-radius:9px;padding:.85rem 1rem;margin-bottom:.4rem}
+  .strip .lead{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-right:.3rem}
+  .pill{font-family:var(--mono);font-size:.62rem;font-weight:600;color:#fff;background:var(--pc);padding:.15rem .5rem;border-radius:4px;white-space:nowrap}
+  .arrow{color:var(--ink-soft);font-family:var(--mono);font-size:.7rem}
+  .strip .res{margin-left:auto;font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--pass)}
+
+  /* task 2 timeline */
+  .tl{position:relative;margin:.6rem 0 0;padding-left:2.4rem}
+  .tl::before{content:"";position:absolute;left:.7rem;top:.4rem;bottom:.4rem;width:2px;background:var(--rule)}
+  .step{position:relative;margin-bottom:.85rem}
+  .step::before{content:"";position:absolute;left:calc(-2.4rem + .3rem);top:.5rem;width:.8rem;height:.8rem;border-radius:50%;background:var(--role);border:2px solid var(--paper);box-shadow:0 0 0 2px var(--role)}
+  .card{background:var(--card);border:1px solid var(--card-edge);border-left:3px solid var(--role);border-radius:8px;padding:.65rem .9rem}
+  .card .top{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;margin-bottom:.25rem}
+  .chip{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--role);padding:.13rem .42rem;border-radius:4px;font-weight:600}
+  .ev{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--ink)}
+  .badge{font-family:var(--mono);font-size:.64rem;font-weight:700;padding:.08rem .4rem;border-radius:4px;border:1px solid currentColor}
+  .badge.esc{color:var(--r-cop)} .badge.appr{color:var(--pass)} .badge.band{color:var(--r-overseer)}
+  .detail{font-size:.9rem;color:var(--ink-soft);line-height:1.45}
+  .step.overseer{--role:var(--r-overseer)} .step.architect{--role:var(--r-architect)} .step.cop{--role:var(--r-cop)}
+  .step.director{--role:var(--r-director)} .step.dev{--role:var(--r-dev)} .step.detect{--role:var(--fail)} .step.verify{--role:var(--pass)}
+  .step.architect .card,.step.overseer .card{background:color-mix(in srgb,var(--role) 7%,var(--card))}
+
+  .note{background:var(--ground);border:1px solid var(--card-edge);border-radius:10px;padding:1rem 1.15rem;margin:1.2rem 0;font-size:.94rem}
+  .note b{color:var(--ink)}
+  .note .lbl{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.45rem}
+  details{margin-top:1.4rem;border-top:1px solid var(--rule);padding-top:1rem}
+  summary{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer}
+  pre{overflow-x:auto;background:var(--card);border:1px solid var(--card-edge);border-radius:8px;padding:.9rem;font-family:var(--mono);font-size:.64rem;line-height:1.5;color:var(--ink-soft);margin-top:.8rem}
+  code{overflow-wrap:anywhere}
+  pre code{overflow-wrap:normal}
+  .foot{margin-top:2.2rem;padding-top:1rem;border-top:1px solid var(--rule);font-family:var(--mono);font-size:.66rem;color:var(--ink-soft);line-height:1.6}
+  @media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr);gap:.9rem}.rung{grid-template-columns:1fr;gap:.3rem}.ladder{padding-left:1.6rem}}
+</style>
+
+<div class="wrap">
+  <nav aria-label="Breadcrumb" style="font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;margin:0 0 1.5rem"><a href="../index.html" style="color:var(--accent);text-decoration:none">&larr; AES Research</a> <span style="color:var(--ink-soft);margin:0 .2rem">/</span> <a href="index.html" style="color:var(--accent);text-decoration:none">Writing</a></nav>
+  <div class="eyebrow"><span>AES Research</span><span class="dot"></span><span>Recorded trace</span><span class="dot"></span><span>Multi-agent self-healing stack</span></div>
+  <h1>A self-healing agent stack, recorded</h1>
+  <p class="dek">A real run of a governed multi-agent stack against a <b>live running service</b> — the execution roles, the escalation ladder up to a full-context architect, and an always-on overseer that caught the service serving stale prices and restarted it. Nothing here is mocked; this is the actual event log, replayed.</p>
+  <p style="margin:.15rem 0 0;font-family:var(--mono);font-size:.72rem"><a href="https://github.com/Fortune0001/governed-self-healing-agent-stack" style="color:var(--accent);text-decoration:none">Full package, code &amp; raw trace on GitHub →</a></p>
+
+  <div class="stats">
+    <div class="stat"><span class="v">7</span><span class="k">roles</span></div>
+    <div class="stat"><span class="v">31</span><span class="k">logged steps</span></div>
+    <div class="stat"><span class="v">3</span><span class="k">tasks</span></div>
+    <div class="stat"><span class="v">1</span><span class="k">escalation</span></div>
+    <div class="stat"><span class="v">1</span><span class="k">service restart</span></div>
+    <div class="stat"><span class="v green">$0</span><span class="k">out-of-pocket</span></div>
+  </div>
+
+  <h2>The stack — resolve low, escalate up, watch it all</h2>
+  <p style="color:var(--ink-soft);font-size:.96rem;margin:0 0 1rem;max-width:44rem">Context and cost rise as you climb. Cheap domain-scoped roles absorb the routine; ambiguity escalates up to the expensive full-context architect; and the overseer sits over the whole pipeline.</p>
+  <div class="ladder">
+    <div class="rung overseer"><div class="who"><span class="rc">Overseer</span><span class="fires">always-on</span></div><span class="desc">Watches the whole pipeline: no never-ending loops, each deliverable <b>cost-consistent</b> with the last; monitors the service, can stop/restart it. <em>("The you part.")</em></span></div>
+    <div class="rung architect"><div class="who"><span class="rc">Architect</span><span class="fires">ambiguity / ratified change</span></div><span class="desc">Full context → expensive. Fires on two triggers only: an ambiguity a director escalates, or a precedent-level business change that needs ratifying directly. Writes the ruling into the spec of record and queues operational tickets to the overseer.</span></div>
+    <div class="rung cop"><div class="who"><span class="rc">Traffic-cop</span><span class="fires">every task</span></div><span class="desc">Owns the queue; routes work; escalates ambiguity up rather than guessing.</span></div>
+    <div class="rung director"><div class="who"><span class="rc">Director</span><span class="fires">every review</span></div><span class="desc">Domain-scoped → cheap. Scores candidates against an authored rubric and catches gaps. Absorbs the bulk of decisions so architect calls stay rare.</span></div>
+    <div class="rung exec"><div class="who"><span class="rc">Research · Dev-executor · Verifier</span><span class="fires">execution</span></div><span class="desc">Author the spec + rubric · propose a candidate into a separate slot · gate the loop on a green re-test.</span></div>
+  </div>
+
+  <h2>Task 1 — the clean loop (no escalation needed)</h2>
+  <div class="strip">
+    <span class="lead">healed</span>
+    <span class="pill" style="--pc:var(--fail)">detect 2✗</span><span class="arrow">→</span>
+    <span class="pill" style="--pc:var(--r-research)">research spec+rubric</span><span class="arrow">→</span>
+    <span class="pill" style="--pc:var(--r-cop)">dispatch</span><span class="arrow">→</span>
+    <span class="pill" style="--pc:var(--r-dev)">fix candidate</span><span class="arrow">→</span>
+    <span class="pill" style="--pc:var(--r-director)">director 9/10</span><span class="arrow">→</span>
+    <span class="pill" style="--pc:var(--r-dev)">apply</span><span class="arrow">→</span>
+    <span class="pill" style="--pc:var(--pass)">verify ✓</span>
+    <span class="res">2 → 0 fail</span>
+  </div>
+  <p style="color:var(--ink-soft);font-size:.88rem;margin:.5rem 0 0">A pricing bug (wrong discount threshold + tax base). Fixed and vetted in one pass — the director approved a correct candidate, no ambiguity to raise. Most work looks like this — nothing to raise, so the escalation layers never wake.</p>
+
+  <h2>Task 2 — an ambiguity forces the ladder</h2>
+  <div class="tl">
+    <div class="step detect"><div class="card"><div class="top"><span class="chip">verifier</span><span class="ev">detect_fail</span></div><div class="detail">New requirement: members get a 5% loyalty discount. The test fails — <code>order_total()</code> has no <code>member</code> parameter yet.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">monitor</span><span class="badge band">loop-guard 0/2</span></div><div class="detail">Opens the task, sets the baseline from Task 1 (clean loop = 8 steps, 0 escalations), arms the loop-guard cap. Now watching.</div></div></div>
+    <div class="step cop"><div class="card"><div class="top"><span class="chip">traffic_cop</span><span class="ev">dispatch</span></div><div class="detail">Dispatches the fix task to the dev-executor.</div></div></div>
+    <div class="step dev"><div class="card"><div class="top"><span class="chip">dev_executor</span><span class="ev">fix_proposed</span></div><div class="detail">Adds <code>member</code>; stacks loyalty <b>additively</b> with the bulk discount — a reasonable guess, but the spec never said which way to stack.</div></div></div>
+    <div class="step director"><div class="card"><div class="top"><span class="chip">director</span><span class="ev">verdict</span><span class="badge esc">ESCALATE</span></div><div class="detail">Tests pass 4/4 — but the stacking rule <em>isn't defined in the spec of record</em>, only asserted in a code comment claiming architect authority. A rule that merely passes a test isn't ratified. Not the director's call to set precedent → escalate.</div></div></div>
+    <div class="step cop"><div class="card"><div class="top"><span class="chip">traffic_cop</span><span class="ev">escalate</span></div><div class="detail">Queues the ambiguity <b>up</b> to the architect — an unspecified rule is a precedent decision, above the director's domain scope.</div></div></div>
+    <div class="step architect"><div class="card"><div class="top"><span class="chip">architect</span><span class="ev">ratify</span><span class="badge appr">RULED</span></div><div class="detail"><b>Full-context call — the first of two in the run.</b> Rules that loyalty stacks additively (single combined rate on the subtotal), applies whenever <code>member=True</code>, and <b>writes it into SPEC.md</b> (§1.1 + a new rubric checkpoint) so the record is authoritative going forward.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">consistency_check</span><span class="badge band">loop-guard 1/2 ✓</span></div><div class="detail">Confirms spec (ratified) = candidate = tests all agree, and reconciles the previously-unratified comment now that the spec backs it. A single ratified hand-off, no back-and-forth churn → cleared, not a runaway loop.</div></div></div>
+    <div class="step cop"><div class="card"><div class="top"><span class="chip">traffic_cop</span><span class="ev">route</span></div><div class="detail">Escalation resolved → the candidate now conforms to the spec of record → route to apply.</div></div></div>
+    <div class="step dev"><div class="card"><div class="top"><span class="chip">dev_executor</span><span class="ev">applied</span></div><div class="detail">Candidate applied to the live file — the one state-mutating step, after the ladder cleared it.</div></div></div>
+    <div class="step verify"><div class="card"><div class="top"><span class="chip">verifier</span><span class="ev">verify_pass</span></div><div class="detail">Re-ran the suite. All 4 cases green (44.00 / 88.00 / 176.00 / member 82.50).</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">cost_consistency</span><span class="badge band">WITHIN BAND</span></div><div class="detail">Task 2 ran 12 steps vs Task 1's 8 — the +4 traces to <em>one legitimate governance escalation</em>, not runaway churn. Deliverable accepted; no service intervention needed.</div></div></div>
+  </div>
+
+  <h2>Task 3 — a live service goes stale, and the overseer restarts it</h2>
+  <p style="color:var(--ink-soft);font-size:.96rem;margin:0 0 1rem;max-width:44rem">A real pricing service is running on <code>127.0.0.1:8899</code>. It imported the pricing module at startup and holds it in memory — so a change on disk does not reach it. That makes drift a real, observable condition, and the only fix is a restart.</p>
+  <div class="tl">
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">service_watch</span></div><div class="detail">Live service up (pid 52688). Baseline captured: tax 10%, <code>/price?sub=100</code> → <b>88.00</b>.</div></div></div>
+    <div class="step architect"><div class="card"><div class="top"><span class="chip">architect</span><span class="ev">ticket</span><span class="badge esc">TKT-001</span></div><div class="detail">A business rule changes: sales tax 10% → 8%. Ratified into the spec — and the architect flags the <em>operational</em> consequence itself: the running process holds the old rate in memory and will keep serving it no matter what the code says. Severity: non-catastrophic. Service action routed to the overseer.</div></div></div>
+    <div class="step cop"><div class="card"><div class="top"><span class="chip">traffic_cop</span><span class="ev">dispatch</span></div><div class="detail">Splits the ticket: code change → dev-executor; service action → overseer.</div></div></div>
+    <div class="step dev"><div class="card"><div class="top"><span class="chip">dev_executor</span><span class="ev">applied</span></div><div class="detail">Ratified constant change applied: <code>TAX_RATE</code> 0.10 → 0.08, plus the four dependent test expectations.</div></div></div>
+    <div class="step verify"><div class="card"><div class="top"><span class="chip">verifier</span><span class="ev">verify_pass</span><span class="badge appr">DISK 4/4</span></div><div class="detail">All four cases green <em>on disk</em> at the new rate (43.20 / 86.40 / 172.80 / 81.00). By every normal signal, the job is done.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">drift_detected</span><span class="badge esc">NON-CATASTROPHIC</span></div><div class="detail"><b>But the service is quietly wrong.</b> Probing the live process: tax <b>0.10</b>, <code>/price</code> → <b>88.00</b>, while disk says 0.08 → 86.40. The process is up, the health check is green, the suite is passing — and customers are being charged the superseded rate. Only a role watching the <em>running service</em> catches this.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">log_triage</span></div><div class="detail">Reads the raw service log and reduces it to a signature (<code>{service_start:1, health:2, price:3}</code>, all responses carrying the stale rate, 0 errors) rather than forwarding the raw log up the ladder — the cheap role absorbs the volume so the expensive architect's context doesn't have to.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">service_stopped</span></div><div class="detail">Stops the live process (pid 52688 terminated, confirmed down) to clear the stale in-memory module.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">service_restarted</span><span class="badge appr">NEW PID 25444</span></div><div class="detail">Brings the service back up. The new process re-imports the module and now serves the ratified rate. A different PID is the proof it is genuinely a new process, not a reload.</div></div></div>
+    <div class="step verify"><div class="card"><div class="top"><span class="chip">verifier</span><span class="ev">verify_pass</span><span class="badge appr">LIVE ✓</span></div><div class="detail">Live service now reconciled with disk: tax 0.08, <code>/price</code> → <b>86.40</b>, member → <b>81.00</b>. Verified against the running process, not the test suite.</div></div></div>
+    <div class="step overseer"><div class="card"><div class="top"><span class="chip">overseer</span><span class="ev">cost_consistency</span><span class="badge band">WITHIN BAND</span></div><div class="detail">Task 3 ran 11 steps: one architect ticket, zero loops, one service intervention. Accounted for and within band.</div></div></div>
+  </div>
+
+  <div class="note"><span class="lbl">What the top of the ladder is for</span>
+    Routine work resolves at the cheap bottom rungs; the costly top only wakes for the exceptions. Across three tasks the <b>architect ran twice</b> — once to rule on an unratified rule, once to ratify a business change and flag its operational fallout — and the <b>overseer intervened once</b>, on the one failure no test could have caught. Task 1 needed neither. That distribution is the design: if the architect ran on every question it would be unaffordable, and without an overseer watching the running service, a green test suite would have signed off on a service charging the wrong tax.
+  </div>
+  <div class="note"><span class="lbl">Limitations</span>
+    <b>"Self-healing" names the closed loop, not an autonomous goal-seeker.</b> The <em>apply</em> and <em>service-recovery</em> steps run without a human; in Tasks 1 and 2, detection and the brief are not self-originating — they come from a test signal, a probe, or a ratified ticket. In Task 3 the overseer's drift detection is self-originated, catching a stale-service failure the passing test suite could not. Every candidate still passes a review gate before it touches a live file. And this page is a <b>static replay</b> of a recorded run: it proves what happened and when, and is not itself a live system.
+  </div>
+  <div class="note"><span class="lbl">The same stack, at production scale</span>
+    This shape authored a full production system's content and code through a brief→generate→extract→review→ledger cycle, across ≈<b>55 dev briefs in one subdirectory</b> (fix and feature work combined), with the director issuing real REVISE verdicts (one constraint recovered across an <code>APPROVE(9)→REVISE(6)×2→APPROVE(8)×3</code> arc) and a dual-judge audit on two model families. That system was <em>later</em> migrated to a key-free two-tier substrate; the fix-cycle evidence above predates the migration, and its cost figures are modeled token cost, not billed spend. The toy on this page runs at $0 for a different reason — it executes in-session on quota-based billing.
+  </div>
+
+  <details><summary>Raw trace — trace.jsonl (31 events, 3 tasks)</summary>
+<pre>T1  0  verifier       detect_fail       2 of 3 fail
+    1  research        spec_authored     SPEC.md + 6-pt rubric
+    2  traffic_cop     dispatch
+    3  dev_executor    fix_proposed      candidate (>= threshold, tax on net)
+    4  director        verdict           APPROVE  9/10  (ran tests + 3 edge cases)
+    5  traffic_cop     route             quality>=8 -> apply
+    6  dev_executor    applied
+    7  verifier        verify_pass       3/3 green
+T2  8  verifier       detect_fail       member case: no 'member' param
+    9  overseer        monitor           baseline=T1(8 steps); loop-guard 0/2
+   10  traffic_cop     dispatch
+   11  dev_executor    fix_proposed      member; loyalty stacked ADDITIVELY (spec silent)
+   12  director        verdict           ESCALATE  (tests pass, rule unratified)
+   13  traffic_cop     escalate          -> architect (precedent, above director)
+   14  architect       ratify            additive; wrote SPEC.md §1.1 + rubric #7
+   15  overseer        consistency_check spec==candidate==tests; loop-guard 1/2 cleared
+   16  traffic_cop     route             ratified -> apply
+   17  dev_executor    applied
+   18  verifier        verify_pass       4/4 green
+   19  overseer        cost_consistency  T2=12 vs T1=8; +4 = 1 escalation; WITHIN_BAND
+T3 20  overseer       service_watch     live svc pid 52688; tax 0.10; /price=88.00
+   21  architect       ticket            TKT-001 tax 10%->8%; flags stale-memory restart
+   22  traffic_cop     dispatch          code->dev_executor; operational->overseer
+   23  dev_executor    applied           TAX_RATE 0.08 + 4 test expectations
+   24  verifier        verify_pass       DISK 4/4 green at 8%
+   25  overseer        drift_detected    live 0.10/88.00 vs disk 0.08/86.40  NON-CATASTROPHIC
+   26  overseer        log_triage        6 raw lines -> signature (protects architect ctx)
+   27  overseer        service_stopped   pid 52688 terminated, confirmed down
+   28  overseer        service_restarted new pid 25444; re-imported module; serving 8%
+   29  verifier        verify_pass       LIVE reconciled: 86.40 / member 81.00 / tax 0.08
+   30  overseer        cost_consistency  T3=11 steps; 1 ticket, 0 loops, 1 intervention</pre>
+  </details>
+
+  <div class="foot">AES Research · a recorded multi-agent trace, replayed statically · zero out-of-pocket compute · <a href="https://github.com/Fortune0001/governed-self-healing-agent-stack" style="color:var(--accent);text-decoration:none">full package &amp; code</a></div>
+  <div style="margin-top:.7rem;font-family:var(--mono);font-size:.62rem;color:var(--ink-soft);line-height:1.6">© 2026 Daniel Higuera · AES Research · Houston · Written works licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/" style="color:var(--accent);text-decoration:none">CC BY-SA 4.0</a> · code licensed separately · <a href="../license.html" style="color:var(--accent);text-decoration:none">Licensing &amp; citation</a></div>
+</div>

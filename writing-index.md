@@ -59,3 +59,9 @@ transformers, Kubernetes, and Ray — ~6.9M lines across four languages — inve
 **[Run report: ray-project/ray (C++/Python/Java, polyglot)](ray-polyglot-capability-proof.html)** · 7 min · 2026-07-04
 
 **[Metered knowledge extraction at scale: efficiency metrics from a composable research pipeline](research-pipeline-efficiency.html)** · 4 min · 2026-07-04
+
+## Recorded traces
+
+**[A self-healing agent stack, recorded](self-healing-agent-stack.html)**
+
+A recorded multi-agent trace of a governed self-healing stack: cheap domain-scoped roles absorb the routine, one ambiguity escalates up to a full-context architect, and an always-on overseer catches a live service serving stale prices and restarts it. Nothing mocked — the actual event log, replayed. Runnable package and code on GitHub. · recorded trace · 2026-09-05
